@@ -44,7 +44,7 @@
               <a class="navbar-brand" href="./">
                 <img id="logo" class="ms-1 me-1 pt-0" src="./img/fom-app-logo-01.svg" alt="Logo" width="180" height="27" />
               </a>
-              <button type="button" class="btn btn-danger btn-sm text-white d-none d-md-block" title="Create custom key tag" onclick="openKeyTagsByStockNumberModal('${stockNumber}')"><i class="bi bi-plus-circle me-2"></i>Key Tag</button>
+              
             </div>
             <div class="navbar-center d-none d-md-block">
               <form class="form-group d-flex flex-row justify-content-center align-items-center" role="search">
@@ -103,6 +103,11 @@
           </div>
         </nav>
       </header>
+      <div class="position-fixed top-0 end-0 mt-5 p-2">
+        <button type="button" class="py-1 px-4 m-2 btn btn-danger btn-sm rounded-pill text-white d-none d-md-block" title="Create custom key tag" onclick="openKeyTagsByStockNumberModal('${stockNumber}')">
+          <i class="bi bi-plus-lg me-2"></i> New Key Tag
+        </button>
+      </div>
 
       <!-- RIGHT SIDE MENU-->
       <div
@@ -123,31 +128,42 @@
             <input
               type="search"
               class="form-control d-inline-flex search-width m-1"
-              id="searchFilterSideBar"
+              id="searchFilter"
               placeholder="Search"
               name="search"
               aria-label="Search"
               title="Filter vehicles by year, make, model, stock number or VIN"
               autocomplete="off"
             />
-            <select id="yearFilterSideBar" class="form-select w-100 my-1">
+            <select id="yearFilter" class="form-select w-100 my-1">
               <option value="">Year</option>
               <option value="">All</option>
             </select>
 
-            <select id="manufacturerFilterSideBar" class="form-select w-100 my-1">
+            <select id="manufacturerFilter" class="form-select w-100 my-1">
               <option value="">Make</option>
               <option value="">All</option>
             </select>
             
-            <select id="typeFilterSideBar" class="form-select w-100 my-1">
+            <select id="typeFilter" class="form-select w-100 my-1">
               <option value="">Type</option>
               <option value="">All</option>
             </select>
             
+            <select id="usageFilter" class="form-select w-100 my-1">
+              <option value="">New</option>
+              <option value="">Used</option>
+            </select>
+            
+            <select id="photosFilter" class="form-select w-100 my-1">
+              <option value="">In-House Photos</option>
+              <option value="">Yes</option>
+              <option value="">No</option>
+            </select>
+            
             <label for="updatedFilter" class="visually-hidden">Updated:</label>
-            <input type="date" id="updatedFilterSideBar" value="" class="form-control d-inline-flex w-25 me-1 visually-hidden" name="updated-date" onchange="filterTable()">
-            <div class="card px-2 text-start form-check w-100">
+            <input type="date" id="updatedFilter" value="" class="form-control d-inline-flex w-25 me-1 visually-hidden" name="updated-date" onchange="filterTable()">
+            <div class="card px-2 my-1 text-start form-check w-100">
               <label class="form-check-label p-2" for="flexCheckChecked">
                 <input class="form-check-input ms-1 me-3" type="checkbox" value="" id="flexCheckChecked" checked>
                 Stock Photos
