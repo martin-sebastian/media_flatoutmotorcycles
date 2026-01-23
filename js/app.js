@@ -1873,7 +1873,7 @@ function updateTable() {
       <td class="visually-hidden">${color}</td>
       <td>
         <div class="input-group input-group-sm flex-nowrap" style="width: 150px;">
-          <input type="text" class="form-control" value="${stockNumber}" placeholder="Stock Number" title="${stockNumber}" aria-label="stock number" aria-describedby="btnGroupAddon">
+          <input type="text" class="form-control d-block" value="${stockNumber}" placeholder="Stock Number" title="${stockNumber}" aria-label="stock number" aria-describedby="btnGroupAddon">
           <div class="input-group-text" id="btnGroupAddon">
             <button type="button" 
               class="btn-icon" 
@@ -1886,13 +1886,16 @@ function updateTable() {
           </div>
         </div>
       </td>
-      <td><span class="badge bg-success p-2 fw-bold border">${webPrice}</span></td>
+      <td>
+        <span class="badge text-bg-success h5 fw-bold">${webPrice}</span>
+      </td>
       <td>
         <span class="badge text-secondary p-2 fw-semibold border"
               title="${normalizeDate(updated).format("MM-DD-YYYY")}"
               data-bs-toggle="tooltip"
               data-bs-placement="top">
-          ${normalizeDate(updated).fromNow()}
+            ${normalizeDate(updated).fromNow()}
+            </span>
           <span class="small text-muted d-none">${normalizeDate(updated).format("MM-DD-YYYY")}</span>
         </span>
         <span class="visually-hidden">${normalizeDate(updated).format("YYYY-MM-DD")}</span>
@@ -1908,7 +1911,7 @@ function updateTable() {
 
       <td class="text-center no-wrap">
         <div class="action-button-group" role="group" aria-label="Vehicles">
-          <button type="button" id="keytagModalButton" class="btn btn-danger action-button mx-1"  title="Print Key Tag" data-bs-toggle="modal" data-bs-target="#keytagModal" data-bs-stocknumber="${stockNumber}">
+          <button type="button" id="keytagModalButton" class="btn btn-danger action-button mx-1" title="Print Key Tag" data-bs-toggle="modal" data-bs-target="#keytagModal" data-bs-stocknumber="${stockNumber}">
             <i class="bi bi-tag"></i>
             <span style="font-size:10px; text-transform:uppercase;">Key Tags</span>
           </button>
@@ -1924,6 +1927,17 @@ function updateTable() {
             class="btn btn-danger action-button mx-1"
             title="Quote this vehicle"
             onclick="window.location.href = 'quote/?search=${stockNumber}'"
+          >
+            <i class="bi bi-card-heading"></i>
+            <span style="font-size:10px; text-transform:uppercase;">Quote</span>
+          </a>
+
+          <a
+            href="javascript:void(0);" 
+            type="button" 
+            class="btn btn-danger action-button mx-1"
+            title="Goto TV Display Launcher"
+            onclick="window.location.href = 'tv/?stockInput=${stockNumber}'"
           >
             <i class="bi bi-card-heading"></i>
             <span style="font-size:10px; text-transform:uppercase;">Quote</span>

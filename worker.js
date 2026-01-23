@@ -1,4 +1,4 @@
-const CACHE_NAME = "fom-print-cache-v1";
+const CACHE_NAME = "fom-print-cache-v2";
 const SYNC_TAG = "sync-xml-data";
 const XML_CACHE_NAME = "xml-cache-v1";
 
@@ -23,6 +23,7 @@ const urlsToCache = [
 
 // Install event - cache assets
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
     Promise.all([
       caches.open(CACHE_NAME).then((cache) => {
@@ -86,6 +87,19 @@ async function syncXmlData() {
 
 // Fetch event - serve from cache or network
 self.addEventListener("fetch", (event) => {
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   // Handle XML data requests separately
   if (event.request.url.includes("/xml-data")) {
     event.respondWith(caches.match(event.request).then((response) => response || fetch(event.request)));
@@ -98,7 +112,11 @@ self.addEventListener("fetch", (event) => {
       if (response) {
         return response;
       }
-      return fetch(event.request);
+      return fetch(event.request).then((networkResponse) => {
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+        return networkResponse;
+      });
     })
   );
 });
@@ -114,7 +132,7 @@ self.addEventListener("activate", (event) => {
             return caches.delete(cacheName);
           }
         })
-      );
+      ).then(() => self.clients.claim());
     })
   );
 });

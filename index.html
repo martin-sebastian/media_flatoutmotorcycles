@@ -147,11 +147,11 @@
       <main>
         <div class="container-fluid">
           <!-- element for displaying row count -->
-          <div class="mx-2mt-5">
-            <span class="text-secondary">Results:</span> <span class="mx-1" id="rowCountDisplay"></span></span>
+          <div class="mx-2 mt-4">
+            <span class="text-secondary">Results:</span> <span class="mx-1" id="rowCountDisplay"></span>
           </div>
-          <div class="bg-dark text-light rounded-3 border border-secondary-subtle border-1 vh-90">
-            <div class="table-responsive" style="height: vh90;">
+          <div class="bg-dark text-light rounded-3 overflow-hidden border border-secondary-subtle border-1">
+            <div class="table-responsive">
               <table id="vehiclesTable" class="table table-borderless table-striped table-sm">
                 <thead>
                   <tr>
@@ -518,6 +518,7 @@
       // Register for periodic sync
       async function startPeriodicSync() {
         try {
+          const registration = await navigator.serviceWorker.ready;
           // Check if periodic sync is supported
           if (!('periodicSync' in registration)) {
             console.log('Periodic Sync is not supported by this browser');
