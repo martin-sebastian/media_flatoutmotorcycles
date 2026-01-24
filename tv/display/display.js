@@ -487,22 +487,24 @@ function renderPortrait(data, imageUrl, customText, apiData, preferredImages, sl
 
       <div class="row g-3">
         <div class="col-12 col-lg-6">
-          <div class="tv-panel my-3 p-3 h-100 w-100">
-            <div class="text-uppercase text-danger h2 fw-bold my-2">Show Special</div>
+          <div class="tv-panel my-3 p-4 h-100 w-100">
+            <div class="text-uppercase text-danger h2 fw-bold mt-2">Show Special</div>
+            <div class="badge h4 mb-4 bg-danger">${data.usage || "N/A"}</div>
+            <div class="text-secondary text-uppercase fw-semibold">${data.title || ""}</div>
+            <div class="mb-4">${data.stockNumber || "N/A"}</div>
             ${
               msrpValue
-                ? `<div class="text-secondary small ${hasDiscount ? "text-decoration-line-through" : ""}">MSRP ${formatPrice(msrpValue)}</div>`
+                ? `<div class="text-secondary h6 mb-0 ${hasDiscount ? "text-decoration-line-through" : ""}"><span class="text-decoration-none">MSRP<span> ${formatPrice(msrpValue)}</div>`
                 : ""
             }
-            <div class="h1 fw-bold">${formatPrice(specialValue)}</div>
-            <div class="d-flex justify-content-start mt-1 fw-semibold text-danger fs-5"><span class="me-2">Est. payment</span><span>${formatPrice(monthlyPayment)}/mo</span></div>
-            <div class="text-secondary mt-4">${data.title || ""}</div>
-            <div># ${data.stockNumber || "N/A"}</div>
+            <div class="h1 mb-0 fw-bold">${formatPrice(specialValue)}</div>
+            <div class="d-flex justify-content-start mt-0 fw-semibold text-danger fs-5"><span class="me-2">Est. payment</span><span>${formatPrice(monthlyPayment)}/mo</span></div>
+            
             
           </div>
         </div>
         <div class="col-12 col-lg-6">
-          <div class="tv-panel my-3 py-4 px-3 h-100 w-100">
+          <div class="tv-panel my-3 p-4 px-3 h-100 w-100">
             <div class="fw-semibold mt-2">Fees & Taxes</div>
             <div class="opacity-25">${rebatesMarkup}</div>
             <div class="opacity-25">${feesMarkup}</div>
@@ -523,7 +525,7 @@ function renderPortrait(data, imageUrl, customText, apiData, preferredImages, sl
           </div>
         </div>
         <div class="col-12 col-lg-4">
-          <div class="tv-panel my-3 p-3 h-100 w-100 d-flex align-items-center justify-content-center">
+          <div class="tv-panel my-3 p-4 h-100 w-100 d-flex align-items-center justify-content-center">
             <div id="qrCode" class="tv-qr"></div>
           </div>
         </div>
@@ -563,50 +565,66 @@ function renderLandscapeSingle(data, imageUrl, customText, apiData, preferredIma
   const featureMarkup = renderFeatureCards(apiData?.AccessoryItems || apiData?.MUItems, swatchColor, accentOne, accentTwo);
   const feesMarkup = renderLineItems(apiData?.OTDItems || []);
   const totalValue = apiData?.OTDPrice;
+  const financeApr = 8.99;
+  const downPaymentRate = 0.1;
+  const financeTermMonths = 144;
+  const totalAmount = Number(totalValue) || Number(specialValue) || 0;
+  const downPayment = totalAmount * downPaymentRate;
+  const financedAmount = totalAmount - downPayment;
+  const monthlyPayment = calculateMonthlyPayment(financedAmount, financeApr, financeTermMonths);
 
   ROOT.innerHTML = `
-    <div class="container">
-
-      <div class="row g-4 align-items-center">
-        <div class="col-12 col-lg-7">
+    <div class="container-fluid">
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-lg-7" style="outline: 2px dashed white">
           ${carouselMarkup}
+          
+          
         </div>
-        <div class="col-12 col-lg-5">
+        <div class="col-12 col-lg-5" style="outline: 2px dashed white">
           <div class="tv-panel p-3 mb-3">
-            <div class="h4 fw-semibold">${data.title || ""}</div>
-            <div class="text-secondary">${data.manufacturer || ""} ${data.modelName || ""}</div>
+            <div class="h2 text-danger mb-4 fw-bold text-uppercase">Show Special</div>
+            <div class="badge h4 bg-danger">${data.usage || "N/A"}</div>
+            <div class="h6 text-secondary text-uppercase fw-semibold mb-0">${data.title || ""}</div>
+            <div class="text-light mb-4">${data.stockNumber || ""}</div>
             ${
               msrpValue
-                ? `<div class="text-secondary small ${hasDiscount ? "text-decoration-line-through" : ""}">MSRP ${formatPrice(msrpValue)}</div>`
+                ? `<div class="text-secondary h6 mb-0 ${hasDiscount ? "text-decoration-line-through" : ""}">MSRP ${formatPrice(msrpValue)}</div>`
                 : ""
             }
-            <div class="display-6 fw-bold text-danger mt-2">${formatPrice(specialValue)}</div>
-            ${paymentValue ? `<div class="mt-2 fw-semibold">Payment ${formatPrice(paymentValue)}/mo</div>` : ""}
-            ${customText ? `<div class="mt-2 fw-semibold">${customText}</div>` : ""}
+            <div class="display-6 fw-bold text-light mt-0">${formatPrice(specialValue)}</div>
+            <div class="d-flex justify-content-start mt-0 fw-semibold text-danger fs-5"><span class="me-2">Est. payment</span><span>${formatPrice(monthlyPayment)}/mo</span></div>
           </div>
           <div class="tv-panel p-3">
-            <div>Stock: ${data.stockNumber || "N/A"}</div>
-            <div>Type: ${data.modelType || "N/A"}</div>
-            <div>Usage: ${data.usage || "N/A"}</div>
             ${totalValue ? `<div class="mt-2 fw-semibold">Total ${formatPrice(totalValue)}</div>` : ""}
             ${feesMarkup}
           </div>
         </div>
+        <!-- SECOND ROW -->
+        <div class="row g-3">
+          <div class="col-12 col-lg-7" style="outline: 2px dashed blue">
+            ${customText ? `<div class="tv-panel p-3 fw-semibold">${customText}</div>` : ""}
+            ${featureMarkup ? `<div class="mt-4">${featureMarkup}</div>` : ""}
+          </div>
+
+          <div class="col-12 col-lg-5" style="outline: 2px dashed green">
+            ${
+              videoEmbedUrl
+                ? `
+                <div class="mt-3">
+                  <div class="tv-video-frame">
+                    <iframe src="${videoEmbedUrl}" title="Overview Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                  </div>
+                </div>
+              `
+                : ""
+            }
+          </div>
+        </div>
       </div>
 
-      ${featureMarkup ? `<div class="mt-2">${featureMarkup}</div>` : ""}
 
-      ${
-        videoEmbedUrl
-          ? `
-          <div class="mt-3">
-            <div class="tv-video-frame">
-              <iframe src="${videoEmbedUrl}" title="Overview Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            </div>
-          </div>
-        `
-          : ""
-      }
+      
     </div>
   `;
   initCarousels();

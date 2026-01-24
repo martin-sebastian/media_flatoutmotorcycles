@@ -36,7 +36,7 @@
   </head>
 
 
-  <body class="overflow-hidden overflow-y-auto" data-bs-theme="dark">
+  <body data-bs-theme="dark">
       <header class="sticky-top d-print-none">
         <nav class="navbar navbar-expand-xl bg-body-tertiary bg-blur">
           <div class="container-fluid">
@@ -47,36 +47,37 @@
               
             </div>
             <div class="navbar-center d-none d-md-block">
-              <form class="form-group d-flex flex-row justify-content-center align-items-center" role="search">
+              <form class="form-group d-flex flex-row justify-content-center align-items-center" role="search" data-filter-group="desktop">
                 <label for="searchFilter" class="visually-hidden">Search</label>
                 <input
                   type="search"
                   class="form-control d-inline-flex search-width me-2"
                   id="searchFilter"
+                  data-filter="search"
                   placeholder="Search"
                   name="search"
                   aria-label="Search"
                   title="Filter vehicles by year, make, model, stock number or VIN"
                   autocomplete="off"
                 />
-                <select id="yearFilter" class="form-select d-inline-flex mx-1" style="max-width: 90px">
+                <select id="yearFilter" class="form-select d-inline-flex mx-1" style="max-width: 90px" data-filter="year">
                   <option value="">Year</option>
                   <option value="">All</option>
                 </select>
 
-                <select id="manufacturerFilter" class="form-select mx-1" style="max-width: 90px">
+                <select id="manufacturerFilter" class="form-select mx-1" style="max-width: 90px" data-filter="manufacturer">
                   <option value="">Make</option>
                   <option value="">All</option>
                 </select>
                 
-                <select id="typeFilter" class="form-select mx-1" style="max-width: 90px">
+                <select id="typeFilter" class="form-select mx-1" style="max-width: 90px" data-filter="type">
                   <option value="">Type</option>
                   <option value="">All</option>
                 </select>
                 <label for="updatedFilter" class="visually-hidden">Updated:</label>
-                <input type="date" id="updatedFilter" value="" class="form-control d-inline-flex w-25 me-1 visually-hidden" name="updated-date" onchange="filterTable()">
+                <input type="date" id="updatedFilter" value="" class="form-control d-inline-flex w-25 me-1 visually-hidden" name="updated-date" data-filter="updated" onchange="filterTable()">
                 <div class="form-check w-25 visually-hidden">
-                  <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                  <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" data-filter="stockPhotos" checked>
                   <label class="form-check-label" for="flexCheckChecked">
                     Stock Photos
                   </label>
@@ -106,7 +107,7 @@
 
 
       <div class="position-fixed top-0 end-0 mt-5 p-2">
-        <button type="button" class="py-1 px-4 m-2 btn btn-danger btn-sm rounded-pill text-white d-none d-md-block" title="Create custom key tag" onclick="openKeyTagsByStockNumberModal('${stockNumber}')">
+        <button type="button" class="py-1 px-4 m-2 btn btn-danger btn-sm rounded-pill border-2 border-secondary-subtle text-white d-none d-md-block" title="Create custom key tag" onclick="openKeyTagsByStockNumberModal('${stockNumber}')">
           <i class="bi bi-plus-lg me-2"></i> New Key Tag
         </button>
       </div>
@@ -125,49 +126,50 @@
           <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-          <form class="form-group d-flex flex-column justify-content-center align-items-center" role="search">
-            <label for="searchFilter" class="visually-hidden">Search</label>
+          <form class="form-group d-flex flex-column justify-content-center align-items-center d-md-none" role="search" data-filter-group="mobile">
+            <label for="searchFilterMobile" class="visually-hidden">Search</label>
             <input
               type="search"
               class="form-control d-inline-flex search-width m-1"
-              id="searchFilter"
+              id="searchFilterMobile"
+              data-filter="search"
               placeholder="Search"
               name="search"
               aria-label="Search"
               title="Filter vehicles by year, make, model, stock number or VIN"
               autocomplete="off"
             />
-            <select id="yearFilter" class="form-select w-100 my-1">
+            <select id="yearFilterMobile" class="form-select w-100 my-1" data-filter="year">
               <option value="">Year</option>
               <option value="">All</option>
             </select>
 
-            <select id="manufacturerFilter" class="form-select w-100 my-1">
+            <select id="manufacturerFilterMobile" class="form-select w-100 my-1" data-filter="manufacturer">
               <option value="">Make</option>
               <option value="">All</option>
             </select>
             
-            <select id="typeFilter" class="form-select w-100 my-1">
+            <select id="typeFilterMobile" class="form-select w-100 my-1" data-filter="type">
               <option value="">Type</option>
               <option value="">All</option>
             </select>
             
-            <select id="usageFilter" class="form-select w-100 my-1">
+            <select id="usageFilterMobile" class="form-select w-100 my-1" data-filter="usage">
               <option value="">New</option>
               <option value="">Used</option>
             </select>
             
-            <select id="photosFilter" class="form-select w-100 my-1">
+            <select id="photosFilterMobile" class="form-select w-100 my-1" data-filter="photos">
               <option value="">In-House Photos</option>
               <option value="">Yes</option>
               <option value="">No</option>
             </select>
             
-            <label for="updatedFilter" class="visually-hidden">Updated:</label>
-            <input type="date" id="updatedFilter" value="" class="form-control d-inline-flex w-25 me-1 visually-hidden" name="updated-date" onchange="filterTable()">
+            <label for="updatedFilterMobile" class="visually-hidden">Updated:</label>
+            <input type="date" id="updatedFilterMobile" value="" class="form-control d-inline-flex w-25 me-1 visually-hidden" name="updated-date" data-filter="updated" onchange="filterTable()">
             <div class="card px-2 my-1 text-start form-check w-100">
-              <label class="form-check-label p-2" for="flexCheckChecked">
-                <input class="form-check-input ms-1 me-3" type="checkbox" value="" id="flexCheckChecked" checked>
+              <label class="form-check-label p-2" for="flexCheckCheckedMobile">
+                <input class="form-check-input ms-1 me-3" type="checkbox" value="" id="flexCheckCheckedMobile" data-filter="stockPhotos" checked>
                 Stock Photos
               </label>
             </div>
@@ -202,34 +204,36 @@
       </div>
 
       <main>
-        <div class="container-fluid">
+        <div class="container-fluid page-content">
           <!-- element for displaying row count -->
           <div class="mx-2 mt-4">
             <span class="text-secondary">Results:</span> <span class="mx-1" id="rowCountDisplay"></span>
           </div>
-          <div class="bg-dark text-light rounded-3 overflow-hidden border border-secondary-subtle border-1">
-            <div class="table-responsive">
-              <table id="vehiclesTable" class="table table-borderless table-striped table-sm">
-                <thead>
-                  <tr>
-                    <th class="no-wrap text-center">Image</th>
-                    <th class="no-wrap text-center">Usage</th>
-                    <th class="no-wrap text-center">Year</th>
-                    <th class="no-wrap">Make</th>
-                    <th class="no-wrap">Model</th>
-                    <th class="no-wrap visually-hidden">Type</th>
-                    <th class="no-wrap visually-hidden">Color</th>
-                    <th class="no-wrap text-start">Stock Number</th>
-                    <th class="no-wrap">DMS Price</th>
-                    <th class="no-wrap">Updated</th>
-                    <th class="no-wrap text-center">Photos</th>
-                    <th class="no-wrap text-center">Create Tags & Quotes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- Data will be inserted here dynamically by JavaScript -->
-                </tbody>
-              </table>
+          <div class="table-scroll-container">
+            <div class="bg-dark text-light rounded-3 overflow-hidden border border-secondary-subtle border-1">
+              <div class="table-responsive">
+                <table id="vehiclesTable" class="table table-borderlesstable-striped table-sm">
+                  <thead>
+                    <tr>
+                      <th class="no-wrap text-center">Image</th>
+                      <th class="no-wrap text-center">Usage</th>
+                      <th class="no-wrap text-center">Year</th>
+                      <th class="no-wrap">Make</th>
+                      <th class="no-wrap">Model</th>
+                      <th class="no-wrap visually-hidden">Type</th>
+                      <th class="no-wrap visually-hidden">Color</th>
+                      <th class="no-wrap text-start">Stock Number</th>
+                      <th class="no-wrap">DMS Price</th>
+                      <th class="no-wrap">Updated</th>
+                      <th class="no-wrap text-center">Photos</th>
+                      <th class="no-wrap text-center">Create Tags & Quotes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Data will be inserted here dynamically by JavaScript -->
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
           
@@ -266,9 +270,9 @@
 
 
       <!-- FOOTER -->
-      <footer class="bg-dark text-light" style="height: 3vh; z-index: 99999; display: none;">
-        <div class="w-100 d-flex flex-row justify-content-around align-items-center mt-4">
-          <div class="mx-4">
+      <footer class="bg-dark text-light d-sm-block d-md-none">
+        <div class="navbar fixed-bottom">
+          <div class="mx-auto">
               <button class="btn btn-danger mx-1"><i class="bi bi-house fs-5"></i></button> 
               <button class="btn btn-danger mx-1"><i class="bi bi-calendar-event fs-5"></i></button> 
               <button class="btn btn-danger mx-1"><i class="bi bi-arrow-counterclockwise fs-5"></i></button> 
@@ -278,7 +282,6 @@
       </footer>
       <!-- END FOOTER -->
     
-
       <div class="modal fade" id="overlayModal" tabindex="-1" aria-labelledby="overlayModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-fullscreen">
           <div class="modal-content">
@@ -291,7 +294,6 @@
             </div>
             <div class="modal-footer d-print-none">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              
               <button type="button" class="btn btn-danger" onclick="printOverlayIframe()">
                 Print <i class="bi bi-printer"></i>
               </button>
@@ -321,7 +323,7 @@
         </div>
       </div>
 
-      <div class="modal vh-50 fade" id="keytagModal" tabindex="-1" aria-labelledby="keytagModalLabel" aria-hidden="true">
+      <div class="modal fade" id="keytagModal" tabindex="-1" aria-labelledby="keytagModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
           <div class="modal-content">
             <div class="modal-header d-flex flex-row justify-content-between align-items-center d-print-none">

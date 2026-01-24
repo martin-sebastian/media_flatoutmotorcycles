@@ -9,18 +9,22 @@ const DOM = {
     nextPageBtn: null,
     pageInfo: null,
   },
+  // Refresh filter references based on active group.
+  refreshFilters() {
+    this.filters = {
+      search: getActiveFilterElement("search"),
+      year: getActiveFilterElement("year"),
+      manufacturer: getActiveFilterElement("manufacturer"),
+      type: getActiveFilterElement("type"),
+      usage: getActiveFilterElement("usage"),
+      updated: getActiveFilterElement("updated"),
+      photos: getActiveFilterElement("photos"),
+    };
+  },
   init() {
     this.table = document.getElementById("vehiclesTable");
     this.tableBody = this.table?.getElementsByTagName("tbody")[0];
-    this.filters = {
-      search: document.getElementById("searchFilter"),
-      year: document.getElementById("yearFilter"),
-      manufacturer: document.getElementById("manufacturerFilter"),
-      type: document.getElementById("typeFilter"),
-      usage: document.getElementById("usageFilter"),
-      updated: document.getElementById("updatedFilter"),
-      photos: document.getElementById("photosFilter"),
-    };
+    this.refreshFilters();
     this.pagination = {
       pageSizeSelect: document.getElementById("pageSizeSelect"),
       prevPageBtn: document.getElementById("prevPage"),
@@ -36,6 +40,40 @@ let memoryStorage = {
   vehiclesCacheTimestamp: null,
   tablePagination: null,
 };
+
+// Return the active filter group based on Bootstrap md breakpoint.
+function getActiveFilterGroupName() {
+  return window.matchMedia("(min-width: 768px)").matches ? "desktop" : "mobile";
+}
+
+// Return all filter elements for a given filter name.
+function getFilterElementsByName(name) {
+  return Array.from(document.querySelectorAll(`[data-filter="${name}"]`));
+}
+
+// Return the active filter element for a given filter name.
+function getActiveFilterElement(name) {
+  const group = getActiveFilterGroupName();
+  return document.querySelector(`[data-filter-group="${group}"] [data-filter="${name}"]`);
+}
+
+// Enable active filter group and disable the inactive group.
+function setFilterGroupState() {
+  const activeGroup = getActiveFilterGroupName();
+  const inactiveGroup = activeGroup === "desktop" ? "mobile" : "desktop";
+
+  document
+    .querySelectorAll(`[data-filter-group="${activeGroup}"] [data-filter]`)
+    .forEach((element) => {
+      element.disabled = false;
+    });
+
+  document
+    .querySelectorAll(`[data-filter-group="${inactiveGroup}"] [data-filter]`)
+    .forEach((element) => {
+      element.disabled = true;
+    });
+}
 
 // Add this function near the top of your file, with other utility functions
 function normalizeDate(dateString) {
@@ -55,67 +93,73 @@ function normalizeDate(dateString) {
 
 // Add near the top with other utility functions
 function populateManufacturerDropdown(manufacturers) {
-  const manufacturerFilter = document.getElementById("manufacturerFilter");
-  if (!manufacturerFilter) return;
-
-  // Clear existing options except the first two (default options)
-  while (manufacturerFilter.options.length > 2) {
-    manufacturerFilter.remove(2);
-  }
+  const manufacturerFilters = getFilterElementsByName("manufacturer");
+  if (!manufacturerFilters.length) return;
 
   // Sort manufacturers alphabetically
   manufacturers.sort();
 
-  // Add manufacturers to dropdown
-  manufacturers.forEach((manufacturer) => {
-    const option = document.createElement("option");
-    option.value = manufacturer;
-    option.textContent = manufacturer;
-    manufacturerFilter.appendChild(option);
+  manufacturerFilters.forEach((manufacturerFilter) => {
+    // Clear existing options except the first two (default options)
+    while (manufacturerFilter.options.length > 2) {
+      manufacturerFilter.remove(2);
+    }
+
+    // Add manufacturers to dropdown
+    manufacturers.forEach((manufacturer) => {
+      const option = document.createElement("option");
+      option.value = manufacturer;
+      option.textContent = manufacturer;
+      manufacturerFilter.appendChild(option);
+    });
   });
 }
 
 // Add near the populateManufacturerDropdown function
 function populateYearDropdown(years) {
-  const yearFilter = document.getElementById("yearFilter");
-  if (!yearFilter) return;
-
-  // Clear existing options except the first two (default options)
-  while (yearFilter.options.length > 2) {
-    yearFilter.remove(2);
-  }
+  const yearFilters = getFilterElementsByName("year");
+  if (!yearFilters.length) return;
 
   // Sort years in descending order (newest first)
   years.sort((a, b) => b - a);
 
-  // Add years to dropdown
-  years.forEach((year) => {
-    const option = document.createElement("option");
-    option.value = year;
-    option.textContent = year;
-    yearFilter.appendChild(option);
+  yearFilters.forEach((yearFilter) => {
+    // Clear existing options except the first two (default options)
+    while (yearFilter.options.length > 2) {
+      yearFilter.remove(2);
+    }
+
+    // Add years to dropdown
+    years.forEach((year) => {
+      const option = document.createElement("option");
+      option.value = year;
+      option.textContent = year;
+      yearFilter.appendChild(option);
+    });
   });
 }
 
 // Add near the populateManufacturerDropdown function
 function populateTypeDropdown(types) {
-  const typeFilter = document.getElementById("typeFilter");
-  if (!typeFilter) return;
-
-  // Clear existing options except the first two (default options)
-  while (typeFilter.options.length > 2) {
-    typeFilter.remove(2);
-  }
+  const typeFilters = getFilterElementsByName("type");
+  if (!typeFilters.length) return;
 
   // Sort types alphabetically
   types.sort();
 
-  // Add types to dropdown
-  types.forEach((type) => {
-    const option = document.createElement("option");
-    option.value = type;
-    option.textContent = type;
-    typeFilter.appendChild(option);
+  typeFilters.forEach((typeFilter) => {
+    // Clear existing options except the first two (default options)
+    while (typeFilter.options.length > 2) {
+      typeFilter.remove(2);
+    }
+
+    // Add types to dropdown
+    types.forEach((type) => {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type;
+      typeFilter.appendChild(option);
+    });
   });
 }
 
@@ -168,7 +212,7 @@ function updateSearchSuggestions(query) {
 
   // Find or create the custom dropdown
   let suggestionsDropdown = document.getElementById("custom-suggestions");
-  const searchInput = document.getElementById("searchFilter");
+  const searchInput = getActiveFilterElement("search");
   if (!searchInput) return;
 
   // Create a container for the search input and dropdown if it doesn't exist
@@ -263,7 +307,7 @@ function updateSearchSuggestions(query) {
 
       // Add event to select the suggestion when clicked
       item.addEventListener("click", () => {
-        const searchInput = document.getElementById("searchFilter");
+        const searchInput = getActiveFilterElement("search");
         if (searchInput) {
           searchInput.value = suggestion;
           searchInput.focus();
@@ -324,6 +368,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   DOM.init();
+  setFilterGroupState();
 
   // Setup diagnostic monitoring
   const networkStatus = setupNetworkMonitoring();
@@ -350,39 +395,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     toggleVerticalKeyTag({ target: verticalKeyTagSwitch });
   }
 
-  // Make sure search input is wrapped in a container for dropdown positioning
-  const searchInput = document.getElementById("searchFilter");
-  if (searchInput && !searchInput.closest(".search-container")) {
-    const searchContainer = document.createElement("div");
-    searchContainer.className = "search-container";
-    searchInput.parentNode.insertBefore(searchContainer, searchInput);
-    searchContainer.appendChild(searchInput);
-  }
+  // Make sure search inputs are wrapped for dropdown positioning
+  getFilterElementsByName("search").forEach((searchInput) => {
+    if (searchInput && !searchInput.closest(".search-container")) {
+      const searchContainer = document.createElement("div");
+      searchContainer.className = "search-container";
+      searchInput.parentNode.insertBefore(searchContainer, searchInput);
+      searchContainer.appendChild(searchInput);
+    }
+  });
 
   // Add event listeners using delegation where possible
   document.addEventListener("click", handleGlobalClicks);
 
   // Add filter listeners with debounce
-  if (DOM.filters.search) {
+  const searchInputs = getFilterElementsByName("search");
+  const handleSearchInputDebounced = debounce((value) => {
+    handleSearchInput(value);
+  }, 250);
+
+  searchInputs.forEach((searchInput) => {
     // Add a class for custom styling
-    DOM.filters.search.classList.add("search-with-suggestions");
+    searchInput.classList.add("search-with-suggestions");
 
-    DOM.filters.search.addEventListener(
-      "input",
-      debounce((e) => {
-        handleSearchInput(e.target.value);
-      }, 250)
-    );
-
-    // Handle document clicks to close the dropdown when clicking outside
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest("#searchFilter") && !e.target.closest("#custom-suggestions")) {
-        clearSearchSuggestions();
-      }
+    searchInput.addEventListener("input", (e) => {
+      handleSearchInputDebounced(e.target.value);
     });
 
     // Handle keyboard navigation inside the dropdown
-    DOM.filters.search.addEventListener("keydown", (e) => {
+    searchInput.addEventListener("keydown", (e) => {
       const dropdown = document.getElementById("custom-suggestions");
       if (!dropdown || dropdown.style.display === "none") return;
 
@@ -415,7 +456,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else if (e.key === "Enter") {
         e.preventDefault();
         if (highlighted) {
-          DOM.filters.search.value = highlighted.textContent;
+          searchInput.value = highlighted.textContent;
           filterTable();
           clearSearchSuggestions();
         }
@@ -423,11 +464,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         clearSearchSuggestions();
       }
     });
-  }
+  });
+
+  // Handle document clicks to close the dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest('[data-filter="search"]') && !e.target.closest("#custom-suggestions")) {
+      clearSearchSuggestions();
+    }
+  });
 
   // Add other filter change listeners
-  Object.values(DOM.filters).forEach((filter) => {
-    if (filter && filter.id !== "searchFilter") {
+  document.querySelectorAll("[data-filter]").forEach((filter) => {
+    if (filter.dataset.filter !== "search") {
       filter.addEventListener("change", filterTable);
     }
   });
@@ -448,10 +496,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener(
     "resize",
     debounce(() => {
+      setFilterGroupState();
       const dropdown = document.getElementById("custom-suggestions");
       if (dropdown && dropdown.style.display !== "none") {
         // If dropdown is visible, update its position
-        const searchInput = document.getElementById("searchFilter");
+        const searchInput = getActiveFilterElement("search");
         if (searchInput) {
           // Force a small delay to allow for DOM updates
           setTimeout(() => {
@@ -874,13 +923,13 @@ function initializeTableFeatures() {
 
 function filterTable() {
   // Get the filter input values
-  const searchInput = document.getElementById("searchFilter")?.value.toUpperCase() || "";
-  const yearFilter = document.getElementById("yearFilter")?.value.toUpperCase() || "";
-  const manufacturerFilter = document.getElementById("manufacturerFilter")?.value.toUpperCase() || "";
-  const typeFilter = document.getElementById("typeFilter")?.value.toUpperCase() || "";
-  const usageFilter = document.getElementById("usageFilter")?.value.toUpperCase() || "";
-  const photosFilter = document.getElementById("photosFilter")?.value.toUpperCase() || "";
-  const updatedFilter = document.getElementById("updatedFilter")?.value || "";
+  const searchInput = getActiveFilterElement("search")?.value.toUpperCase() || "";
+  const yearFilter = getActiveFilterElement("year")?.value.toUpperCase() || "";
+  const manufacturerFilter = getActiveFilterElement("manufacturer")?.value.toUpperCase() || "";
+  const typeFilter = getActiveFilterElement("type")?.value.toUpperCase() || "";
+  const usageFilter = getActiveFilterElement("usage")?.value.toUpperCase() || "";
+  const photosFilter = getActiveFilterElement("photos")?.value.toUpperCase() || "";
+  const updatedFilter = getActiveFilterElement("updated")?.value || "";
 
   // Split search input into individual terms
   const searchTerms = searchInput.split(/\s+/).filter((term) => term.length > 0);

@@ -70,7 +70,7 @@ body.tv-body {
 
 .tv-feature-grid {
   width: 100%;
-  max-width: 940px;
+  max-width: 100%;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -153,4 +153,8 @@ body.tv-body {
 .tv-contact-text {
   color: #c9ced4;
   font-size: 0.95rem;
+}
+
+.text-decoration-none {
+  text-decoration: none !important;
 }

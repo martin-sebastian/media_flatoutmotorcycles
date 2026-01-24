@@ -1,8 +1,52 @@
+/* Ensure full height for sticky footers and backgrounds */
+/* 1. Lock the screen height */
 html,
 body {
+  height: 100%;
   margin: 0;
-  padding: 0;
+  overflow: hidden;
+  /* Prevents the whole page from scrolling */
 }
+
+/* 2. Turn Body into a Column */
+body {
+  display: flex;
+  flex-direction: column;
+
+  -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Keep main content flexible with inner scrolling */
+.page-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3. Make Main take up all remaining space */
+main {
+  flex: 1 1 auto;
+  /* Grows to fill space */
+  display: flex;
+  /* Becomes a flex container for its children */
+  flex-direction: column;
+  overflow: hidden;
+  /* Prevents main from scrolling, forces inner scroll */
+  min-height: 0;
+  /* Crucial Firefox/Flexbox fix */
+}
+
+/* 4. The Table Container grows and scrolls */
+.table-scroll-container {
+  flex: 1 1 auto;
+  /* Takes remaining space inside Main */
+  overflow-y: auto;
+  /* Enables scrolling ONLY here */
+  min-height: 0;
+}
+
 .search-width {
   max-width: 440px;
   width: 100%;
