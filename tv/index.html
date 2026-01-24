@@ -85,7 +85,7 @@
 								</div>
 							</div>
 							<div class="col-12 col-md-6">
-								<label for="categorySelect" class="form-label mt-4"
+								<label for="categorySelect" class="form-label mt-4 text-muted"
 									>Category</label
 								>
 								<select id="categorySelect" class="form-select">
@@ -95,8 +95,10 @@
 								</select>
 							</div>
 							<div class="col-12">
-								<label for="imageUrlInput" class="form-label mt-3"
-									><h5 class="mt-4">Select Slideshow Images</h5></label
+								<label for="imageUrlInput" class="form-label w-100 mt-3"
+									><h5 class="w-100 border-bottom mt-4 pb-2">
+										Select Slideshow Images
+									</h5></label
 								>
 								<div class="d-flex align-items-center gap-2">
 									<button
@@ -120,8 +122,8 @@
 								<div id="imageResults" class="row g-3"></div>
 							</div>
 							<div class="col-12">
-								<label for="customTextInput" class="form-label"
-									><h5 class="mt-4">
+								<label for="customTextInput" class="form-label w-100"
+									><h5 class="mt-4 mb-0">
 										Custom Message
 										<span class="small text-secondary">(optional)</span>
 									</h5></label
@@ -134,8 +136,8 @@
 								></textarea>
 							</div>
 							<div class="col-12">
-								<label for="colorPickerInput" class="form-label"
-									><h5 class="mt-4">
+								<label for="colorPickerInput" class="form-label w-100"
+									><h5 class="mt-4 border-bottom pb-2">
 										Select Vehicle Colors
 										<span class="small text-secondary">(optional)</span>
 									</h5></label
@@ -212,18 +214,22 @@
 								</div>
 							</div>
 							<div class="col-12">
-								<div class="form-text">
+								<div class="form-text d-none">
 									Uses the first image by default. Hero selection overrides it.
 								</div>
 							</div>
 						</div>
 
 						<div class="d-flex flex-wrap gap-2 mt-4">
-							<button class="btn btn-danger" type="button" id="buildUrlBtn">
+							<button
+								class="btn btn-danger btn-lg w-50"
+								type="button"
+								id="buildUrlBtn"
+							>
 								<i class="bi bi-link-45deg me-2"></i>Build TV Display URL
 							</button>
 							<button
-								class="btn btn-outline-danger"
+								class="btn btn-outline-secondary"
 								type="button"
 								id="copyUrlBtn"
 							>
