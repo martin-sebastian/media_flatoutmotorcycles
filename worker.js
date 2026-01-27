@@ -126,8 +126,11 @@ function shouldBypassCache(request) {
 function networkFirst(request) {
   return fetch(request)
     .then((response) => {
-      const responseClone = response.clone();
-      caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+      // Only cache valid GET responses
+      if (response.ok && request.method === "GET") {
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+      }
       return response;
     })
     .catch(() => caches.match(request));
@@ -135,6 +138,18 @@ function networkFirst(request) {
 
 // Fetch event - serve from cache or network
 self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+  
+  // Skip non-http(s) requests (chrome-extension://, etc.)
+  if (!url.protocol.startsWith("http")) {
+    return;
+  }
+  
+  // Skip POST and other non-GET requests (Cache API only supports GET)
+  if (event.request.method !== "GET") {
+    return;
+  }
+
   if (event.request.mode === "navigate") {
     event.respondWith(
       networkFirst(event.request)
