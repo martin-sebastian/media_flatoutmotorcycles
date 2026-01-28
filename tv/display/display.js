@@ -1,8 +1,6 @@
-const XML_FEED_URL = "https://www.flatoutmotorcycles.com/unitinventory_univ.xml";
 const PORTAL_API_BASE = "https://newportal.flatoutmotorcycles.com/portal/public/api/majorunit/stocknumber/";
 
 const ROOT = document.getElementById("displayRoot");
-let displayFrameMode = "";
 let previewZoomScale = 1;
 
 /**
@@ -21,7 +19,6 @@ function getQueryParams() {
         .filter(Boolean);
   return {
     layout: config.layout || params.get("layout") || "portrait",
-    template: config.template || params.get("template") || "default",
     stockNumber: (config.stockNumber || params.get("s") || params.get("search") || "").trim(),
     imageUrl: (config.imageUrl || params.get("img") || "").trim(),
     note: (config.note || params.get("note") || "").trim(),
@@ -45,14 +42,6 @@ function getQueryParams() {
  */
 function normalizeStockNumber(value) {
   return (value || "").trim().toUpperCase();
-}
-
-/**
- * Determine if the current screen is portrait.
- * @returns {boolean} True when portrait orientation.
- */
-function isPortraitScreen() {
-  return window.matchMedia("(orientation: portrait)").matches || window.innerHeight >= window.innerWidth;
 }
 
 /**
@@ -105,20 +94,12 @@ function applyPreviewZoom(layout) {
 }
 
 /**
- * Set display frame mode for constrained layouts.
- * @param {string} mode Frame mode value.
- */
-function setDisplayFrameMode(mode) {
-  displayFrameMode = mode;
-}
-
-/**
  * Apply fixed TV mode styling for actual display on TV screens.
  * @param {string} layout Layout string (portrait or landscape).
  */
 function applyTvMode(layout) {
   if (!ROOT) return;
-  const isPortrait = layout !== "landscape" && layout !== "showcase";
+  const isPortrait = layout !== "landscape";
   const targetWidth = isPortrait ? 1080 : 1920;
   const targetHeight = isPortrait ? 1920 : 1080;
   
@@ -137,40 +118,10 @@ function applyTvMode(layout) {
 }
 
 /**
- * Scale framed portrait content to fit the display frame.
- */
-function applyFramedScale() {
-  if (displayFrameMode !== "portrait") return;
-  const frame = document.querySelector(".tv-display-frame-inner");
-  const content = frame?.querySelector(".tv-layout-portrait");
-  if (!frame || !content) return;
-  const scale = Math.min(
-    frame.clientWidth / 1080,
-    frame.clientHeight / 1920
-  );
-  if (window.CSS?.supports?.("zoom: 1")) {
-    content.style.zoom = `${scale}`;
-    content.style.transform = "";
-  } else {
-    content.style.zoom = "";
-    content.style.transform = `scale(${scale})`;
-    content.style.transformOrigin = "top center";
-  }
-}
-
-/**
- * Render markup into the display root, optionally framed.
+ * Render markup into the display root.
  * @param {string} markup HTML markup to render.
  */
 function setDisplayContent(markup) {
-  if (displayFrameMode === "portrait") {
-    ROOT.innerHTML = `
-      <div class="tv-display-frame tv-display-frame-portrait">
-        <div class="tv-display-frame-inner">${markup}</div>
-      </div>
-    `;
-    return;
-  }
   ROOT.innerHTML = markup;
 }
 
@@ -207,51 +158,6 @@ function getSavedPicks(map, stockNumber) {
   };
 }
 
-/**
- * Fetch XML feed text.
- * @returns {Promise<string>} XML text.
- */
-async function fetchXmlText() {
-  const cacheBust = `_t=${Date.now()}`;
-  const url = XML_FEED_URL.includes("?") ? `${XML_FEED_URL}&${cacheBust}` : `${XML_FEED_URL}?${cacheBust}`;
-  const response = await fetch(url, { cache: "no-cache" });
-  if (!response.ok) {
-    throw new Error(`XML fetch failed: ${response.status}`);
-  }
-  return response.text();
-}
-
-/**
- * Parse XML text into item elements.
- * @param {string} xmlText XML feed text.
- * @returns {Element[]} Parsed item nodes.
- */
-function parseItems(xmlText) {
-  const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-  return Array.from(xmlDoc.getElementsByTagName("item"));
-}
-
-/**
- * Read text content for a tag name on an XML item.
- * @param {Element} item XML item element.
- * @param {string} tagName Tag name.
- * @returns {string} Text content.
- */
-function getItemText(item, tagName) {
-  return item.getElementsByTagName(tagName)[0]?.textContent?.trim() || "";
-}
-
-/**
- * Extract image URLs from an XML item.
- * @param {Element} item XML item element.
- * @returns {string[]} Image URLs.
- */
-function getItemImages(item) {
-  return Array.from(item.getElementsByTagName("imageurl"))
-    .map((node) => node.textContent?.trim() || "")
-    .filter(Boolean);
-}
 
 /**
  * Format price as currency.
@@ -322,22 +228,18 @@ function deduplicateImages(urls) {
 /**
  * Build a list of media entries for the carousel.
  * @param {object[]} apiImages API image objects.
- * @param {string[]} xmlImages XML image list.
  * @param {string[]} preferredImages Preferred image URLs.
  * @returns {{type: string, src: string, caption: string}[]} Media entries.
  */
-function buildMediaList(apiImages, xmlImages, preferredImages) {
+function buildMediaList(apiImages, preferredImages) {
   const preferred = (preferredImages || []).filter(Boolean);
   const imageUrls = (apiImages || [])
     .sort((a, b) => (a.Order || 0) - (b.Order || 0))
     .map((img) => safeText(img.ImgURL))
     .filter(Boolean);
-  const fallbackImages = (xmlImages || []).filter(Boolean);
   
-  // Use preferred images if available, otherwise deduplicate API/XML images
-  const allImages = preferred.length 
-    ? preferred 
-    : deduplicateImages(imageUrls.length ? imageUrls : fallbackImages);
+  // Use preferred images if available, otherwise use API images
+  const allImages = preferred.length ? preferred : deduplicateImages(imageUrls);
 
   return allImages.map((url) => ({
     type: "image",
@@ -599,45 +501,6 @@ function renderLineItems(items, bold = false) {
     .join("");
 }
 
-/**
- * Build a normalized data object from XML item fields.
- * @param {Element} item XML item element.
- * @returns {object} Data object.
- */
-function buildXmlData(item) {
-  return {
-    title: getItemText(item, "title"),
-    webURL: getItemText(item, "link"),
-    stockNumber: getItemText(item, "stocknumber"),
-    vin: getItemText(item, "vin"),
-    price: getItemText(item, "price"),
-    manufacturer: getItemText(item, "manufacturer"),
-    year: getItemText(item, "year"),
-    modelName: getItemText(item, "model_name"),
-    modelType: getItemText(item, "model_type"),
-    usage: getItemText(item, "usage"),
-    updated: getItemText(item, "updated"),
-    images: getItemImages(item),
-  };
-}
-
-/**
- * Filter items based on category heuristics.
- * @param {object} itemData Normalized item data.
- * @param {string} category Category from query params.
- * @returns {boolean} Match result.
- */
-function matchesCategory(itemData, category) {
-  if (!category) return true;
-  const haystack = `${itemData.modelType} ${itemData.title} ${itemData.manufacturer}`.toLowerCase();
-  if (category === "boats") {
-    return haystack.includes("boat") || haystack.includes("pontoon") || haystack.includes("sea-doo");
-  }
-  if (category === "vehicles") {
-    return !haystack.includes("boat") && !haystack.includes("pontoon");
-  }
-  return haystack.includes(category);
-}
 
 /**
  * Fetch portal API data for a stock number.
@@ -659,21 +522,37 @@ async function fetchPortalData(stockNumber) {
 }
 
 /**
- * Merge XML and API data, preferring API fields where available.
- * @param {object} xmlData XML-derived data.
- * @param {object|null} apiData API-derived data.
- * @returns {object} Combined data object.
+ * Build vehicle data object from Portal API response only.
+ * @param {object} apiData Portal API response.
+ * @returns {object} Vehicle data object.
  */
-function mergeData(xmlData, apiData) {
-  if (!apiData) return xmlData;
+function buildFromApiData(apiData) {
+  if (!apiData) return null;
+  const title = [
+    apiData.ModelYear,
+    apiData.Manufacturer,
+    apiData.ModelName,
+    apiData.ModelType,
+  ].filter(Boolean).join(" ");
+  
+  const images = (apiData.Images || [])
+    .sort((a, b) => (a.Order || 0) - (b.Order || 0))
+    .map((img) => img.ImgURL)
+    .filter(Boolean);
+  
   return {
-    ...xmlData,
-    manufacturer: apiData.Manufacturer || xmlData.manufacturer,
-    year: apiData.ModelYear || xmlData.year,
-    modelName: apiData.ModelName || xmlData.modelName,
-    modelType: apiData.ModelType || xmlData.modelType,
-    usage: apiData.Usage || xmlData.usage,
-    vin: apiData.VIN || xmlData.vin,
+    stockNumber: apiData.StockNumber || "",
+    title: title,
+    year: apiData.ModelYear || "",
+    manufacturer: apiData.Manufacturer || "",
+    modelName: apiData.ModelName || "",
+    modelType: apiData.ModelType || "",
+    category: apiData.Category || apiData.ModelType || "",
+    usage: apiData.Usage || "",
+    price: apiData.SalePrice || apiData.MSRPUnit || apiData.MSRP || 0,
+    images: images,
+    webURL: apiData.WebURL || "",
+    vin: apiData.VIN || "",
   };
 }
 
@@ -830,130 +709,27 @@ function renderMiddleDefault(data, displayData, customText) {
 }
 
 /**
- * Render middle content for "minimal" template (2 boxes).
- */
-function renderMiddleMinimal(data, displayData, customText) {
-  const { specialValue, msrpValue, hasDiscount, monthlyPayment } = displayData;
-  return `
-    <div class="tv-middle-grid tv-middle-grid-minimal">
-      <div class="tv-box p-4">
-        <div class="text-uppercase text-danger h2 fw-bold">Show Special</div>
-        <div class="badge h4 mb-3 bg-danger">${data.usage || "N/A"}</div>
-        <div class="text-secondary text-uppercase fw-semibold">${data.title || ""}</div>
-        <div class="mb-3">${data.stockNumber || "N/A"}</div>
-        ${msrpValue ? `<div class="text-secondary h5 mb-0 ${hasDiscount ? "text-decoration-line-through" : ""}"><span class="text-decoration-none">MSRP</span> ${formatPrice(msrpValue)}</div>` : ""}
-        <div class="display-4 mb-0 fw-bold">${formatPrice(specialValue)}</div>
-        <div class="d-flex justify-content-start mt-2 fw-semibold text-danger fs-4"><span class="me-2">Est. payment</span><span>${formatPrice(monthlyPayment)}/mo</span></div>
-        ${customText ? `<div class="mt-3 text-secondary">${customText}</div>` : ""}
-      </div>
-      <div class="tv-box p-4 d-flex flex-column align-items-center justify-content-center">
-        <img id="logo" class="mb-4" src="../../img/fom-app-logo-01.svg" alt="Logo" width="200" height="30" />
-        <div id="qrCode" class="tv-qr tv-qr-large"></div>
-        <div class="mt-3 text-secondary small">Scan for details</div>
-      </div>
-    </div>
-  `;
-}
-
-/**
- * Render middle content for "pricing" template (pricing focus).
- */
-function renderMiddlePricing(data, displayData, customText) {
-  const { specialValue, msrpValue, hasDiscount, totalValue, monthlyPayment, feesMarkup, rebatesMarkup } = displayData;
-  return `
-    <div class="tv-middle-grid tv-middle-grid-pricing">
-      <div class="tv-box p-4 tv-box-wide">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-uppercase text-danger h2 fw-bold">Show Special</div>
-            <div class="badge h4 mb-2 bg-danger">${data.usage || "N/A"}</div>
-            <div class="text-secondary text-uppercase fw-semibold">${data.title || ""}</div>
-            <div class="mb-2">${data.stockNumber || "N/A"}</div>
-          </div>
-          <div class="text-end">
-            ${msrpValue ? `<div class="text-secondary h5 mb-0 ${hasDiscount ? "text-decoration-line-through" : ""}">MSRP ${formatPrice(msrpValue)}</div>` : ""}
-            <div class="display-4 fw-bold">${formatPrice(specialValue)}</div>
-            <div class="fw-semibold text-danger fs-4">${formatPrice(monthlyPayment)}/mo</div>
-          </div>
-        </div>
-      </div>
-      <div class="tv-box p-3">
-        <div class="fw-semibold">Fees & Taxes</div>
-        <div class="small">${rebatesMarkup}</div>
-        <div class="small">${feesMarkup}</div>
-        ${totalValue ? `<div class="mt-2 fw-semibold pt-1 border-top border-secondary fs-5 text-danger">Total <span class="float-end">${formatPrice(totalValue)}</span></div>` : ""}
-      </div>
-      <div class="tv-box p-3 d-flex align-items-center justify-content-center">
-        <div id="qrCode" class="tv-qr"></div>
-      </div>
-    </div>
-  `;
-}
-
-/**
- * Render middle content for "features" template (features focus).
- */
-function renderMiddleFeatures(data, displayData, customText) {
-  const { specialValue, monthlyPayment, featureMarkup } = displayData;
-  return `
-    <div class="tv-middle-grid tv-middle-grid-features">
-      <div class="tv-box p-3">
-        <div class="text-uppercase text-danger h3 fw-bold">Show Special</div>
-        <div class="badge bg-danger mb-2">${data.usage || "N/A"}</div>
-        <div class="text-secondary text-uppercase small fw-semibold">${data.title || ""}</div>
-        <div class="h2 mb-0 fw-bold mt-2">${formatPrice(specialValue)}</div>
-        <div class="fw-semibold text-danger">${formatPrice(monthlyPayment)}/mo</div>
-      </div>
-      <div class="tv-box p-3 tv-box-wide">
-        <div class="fw-semibold mb-2">Features & Highlights</div>
-        ${featureMarkup || '<div class="text-secondary">No features available</div>'}
-        ${customText ? `<div class="mt-3 text-secondary">${customText}</div>` : ""}
-      </div>
-      <div class="tv-box p-3 d-flex align-items-center justify-content-center">
-        <div id="qrCode" class="tv-qr"></div>
-      </div>
-    </div>
-  `;
-}
-
-/**
- * Render a single vehicle in portrait layout.
+ * Render portrait layout (default 4 boxes).
  * @param {object} data Vehicle data.
  * @param {string} imageUrl Preferred image URL.
- * @param {string} customText Custom text line.
- * @param {object} apiData API data.
- * @param {string[]} preferredImages Preferred images.
- * @param {number} slideStart Slide start index.
- * @param {number} slideEnd Slide end index.
+ * @param {string} customText Custom text overlay.
+ * @param {object} apiData API response data.
+ * @param {string[]} preferredImages Preferred image URLs.
+ * @param {number} slideStart Carousel start index.
+ * @param {number} slideEnd Carousel end index.
  * @param {string} swatchColor Swatch color.
  * @param {string} accentOne Accent color 1.
  * @param {string} accentTwo Accent color 2.
- * @param {string} template Template name.
  */
-function renderPortrait(data, imageUrl, customText, apiData, preferredImages, slideStart, slideEnd, swatchColor, accentOne, accentTwo, template) {
-  const media = buildMediaList(apiData?.Images, data.images, preferredImages);
+function renderPortrait(data, imageUrl, customText, apiData, preferredImages, slideStart, slideEnd, swatchColor, accentOne, accentTwo) {
+  const media = buildMediaList(apiData?.Images, preferredImages);
   const carouselMarkup = renderMediaCarousel("tvCarouselPortrait", media, slideStart, slideEnd);
   const videoMarkup = renderVideoSlot(apiData?.Videos);
   const displayData = buildDisplayData(data, apiData, swatchColor, accentOne, accentTwo);
-  
-  // Select middle content based on template
-  let middleContent;
-  switch (template) {
-    case "minimal":
-      middleContent = renderMiddleMinimal(data, displayData, customText);
-      break;
-    case "pricing":
-      middleContent = renderMiddlePricing(data, displayData, customText);
-      break;
-    case "features":
-      middleContent = renderMiddleFeatures(data, displayData, customText);
-      break;
-    default:
-      middleContent = renderMiddleDefault(data, displayData, customText);
-  }
+  const middleContent = renderMiddleDefault(data, displayData, customText);
 
   setDisplayContent(`
-    <div class="tv-layout-portrait" data-template="${template}">
+    <div class="tv-layout-portrait">
       <div class="tv-skeleton">
         <div class="tv-region-carousel">
           ${carouselMarkup}
@@ -969,7 +745,6 @@ function renderPortrait(data, imageUrl, customText, apiData, preferredImages, sl
   `);
   renderQrCode(data.webURL);
   initCarousels();
-  requestAnimationFrame(applyFramedScale);
 }
 
 /**
@@ -979,7 +754,7 @@ function renderPortrait(data, imageUrl, customText, apiData, preferredImages, sl
  * @param {string} customText Custom text line.
  */
 function renderLandscapeSingle(data, imageUrl, customText, apiData, preferredImages, slideStart, slideEnd, swatchColor, accentOne, accentTwo) {
-  const media = buildMediaList(apiData?.Images, data.images, preferredImages);
+  const media = buildMediaList(apiData?.Images, preferredImages);
   const carouselMarkup = renderMediaCarousel("tvCarouselLandscape", media, slideStart, slideEnd);
   const videoMarkup = renderVideoSlot(apiData?.Videos);
   
@@ -1095,127 +870,6 @@ function renderLandscapeSingle(data, imageUrl, customText, apiData, preferredIma
 }
 
 /**
- * Render a showcase layout for large displays (100" TV).
- * Hero image, thumbnail grid, pricing details.
- */
-function renderShowcase(data, imageUrl, customText, apiData, preferredImages, swatchColor, accentOne, accentTwo) {
-  const media = buildMediaList(apiData?.Images, data.images, preferredImages);
-  const heroImage = media[0]?.src || imageUrl || "../../img/fallback.jpg";
-  
-  // Build thumbnail grid (skip first image since it's the hero)
-  const thumbnails = media.slice(1, 31).map((item, idx) => `
-    <div class="tv-showcase-thumb">
-      <img src="${item.src}" alt="Image ${idx + 2}" />
-    </div>
-  `).join("");
-  
-  // Use buildDisplayData for consistent data handling
-  const displayData = buildDisplayData(data, apiData, swatchColor, accentOne, accentTwo);
-  const {
-    specialValue,
-    msrpValue,
-    hasDiscount,
-    totalValue,
-    monthlyPayment,
-    feesMarkup,
-    rebatesMarkup,
-    discountMarkup,
-    accessoryMarkup,
-  } = displayData;
-
-  const isNew = (data.usage || "").toLowerCase() === "new";
-  const showBothPrices = isNew && hasDiscount;
-
-  setDisplayContent(`
-    <div class="tv-layout-showcase">
-      <!-- Hero Image -->
-      <div class="tv-showcase-hero">
-        <img src="${heroImage}" alt="${data.title || 'Vehicle'}" />
-        <img src="../../img/fom-app-logo-01.svg" alt="Logo" class="tv-showcase-logo" />
-      </div>
-      
-      <!-- Thumbnail Grid -->
-      <div class="tv-showcase-thumbs">
-        ${thumbnails || '<div class="text-secondary">No additional images</div>'}
-      </div>
-      
-      <!-- Info Bar -->
-      <div class="tv-showcase-info">
-        <!-- Left: Title & Price -->
-        <div class="tv-showcase-info-left">
-          <div class="d-flex align-items-center gap-3 mb-2">
-            <span class="badge bg-danger fs-6">${data.usage || "N/A"}</span>
-            <span class="text-secondary text-uppercase fw-semibold">${data.category || ""}</span>
-          </div>
-          <div class="h3 text-light mb-1">${data.title || ""}</div>
-          <div class="text-secondary mb-3">Stock: ${data.stockNumber || ""}</div>
-          ${showBothPrices
-            ? `<div class="text-secondary text-decoration-line-through fs-5">MSRP ${formatPrice(msrpValue)}</div>
-               <div class="display-5 fw-bold text-light">${formatPrice(specialValue)}</div>`
-            : `<div class="display-5 fw-bold text-light">${formatPrice(specialValue || msrpValue)}</div>`
-          }
-          <div class="text-danger fs-5 fw-semibold mt-2">Est. payment ${formatPrice(monthlyPayment)}/mo</div>
-        </div>
-        
-        <!-- Right: Line Items -->
-        <div class="tv-showcase-info-right">
-          ${showBothPrices
-            ? `<div class="d-flex justify-content-between mb-1"><span class="text-secondary">MSRP</span><span>${formatPrice(msrpValue)}</span></div>
-               <div class="d-flex justify-content-between mb-2"><span class="text-secondary">Sale Price</span><span class="fw-semibold">${formatPrice(specialValue)}</span></div>`
-            : `<div class="d-flex justify-content-between mb-2"><span class="text-secondary">Price</span><span class="fw-semibold">${formatPrice(specialValue || msrpValue)}</span></div>`
-          }
-          <hr class="my-2 opacity-25">
-          <div class="tv-showcase-line-items">
-            ${rebatesMarkup}
-            ${discountMarkup}
-            ${accessoryMarkup}
-            ${feesMarkup}
-          </div>
-          ${totalValue ? `<hr class="my-2 opacity-25"><div class="d-flex justify-content-between fw-bold fs-5"><span>Total</span><span>${formatPrice(totalValue)}</span></div>` : ""}
-        </div>
-      </div>
-    </div>
-  `);
-}
-
-/**
- * Render a grid of vehicles for landscape mode.
- * @param {object[]} items Vehicle data list.
- */
-function renderLandscapeGrid(items) {
-  const cards = items
-    .slice(0, 6)
-    .map(
-      (item) => `
-        <div class="col-12">
-          <div class="tv-panel">
-            <img src="${item.images[0] || "../../img/fallback.jpg"}" alt="${item.title || "Flatout Motorsports"}" />
-            <div class="">
-              <div class="fw-semibold">${item.year || ""} ${item.manufacturer || ""}</div>
-              <div class="text-secondary small">${item.modelName || item.title || ""}</div>
-              <div class="fw-bold text-danger">${formatPrice(item.price)}</div>
-              <div class="small text-secondary">Stock: ${item.stockNumber || "N/A"}</div>
-            </div>
-          </div>
-        </div>
-      `
-    )
-    .join("");
-
-  setDisplayContent(`
-    <div class="container">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <img src="../../img/fom-app-logo-01.svg" alt="Flatout Motorsports" width="180" height="27" />
-        <span class="badge text-bg-danger">TV Display</span>
-      </div>
-      <div class="row row-cols-1 row-cols-md-3 g-3">
-        ${cards}
-      </div>
-    </div>
-  `);
-}
-
-/**
  * Render a fallback message.
  * @param {string} message Message to display.
  */
@@ -1224,12 +878,11 @@ function renderMessage(message) {
 }
 
 /**
- * Initialize the display with XML data and optional API enrichment.
+ * Initialize the display with Portal API data.
  */
 async function initDisplay() {
   const {
     layout,
-    template,
     stockNumber,
     imageUrl,
     note,
@@ -1244,109 +897,71 @@ async function initDisplay() {
   } = getQueryParams();
   document.body.setAttribute("data-bs-theme", theme || "dark");
 
-  const wantsPortrait = layout !== "landscape" && layout !== "showcase";
-  const screenIsPortrait = isPortraitScreen();
-  const usePortraitFrame = wantsPortrait && !screenIsPortrait && !preview;
-  
-  // In preview mode, always allow display regardless of orientation
-  if (!preview && !usePortraitFrame && wantsPortrait !== screenIsPortrait) {
-    renderMessage(
-      wantsPortrait
-        ? "You can only display this on a portrait oriented screen."
-        : "You can only display this on a landscape oriented screen."
-    );
-    return;
-  }
-  
-  setDisplayFrameMode(usePortraitFrame ? "portrait" : "");
-  
   if (preview) {
-    // Preview mode: scale to fit current viewport
     applyPreviewZoom(layout);
     window.addEventListener("resize", () => applyPreviewZoom(layout));
-  } else if (!usePortraitFrame) {
-    // Actual TV mode: apply fixed dimensions for crisp rendering
-    // Skip when using portrait frame (portrait on landscape screen)
+  } else {
     applyTvMode(layout);
   }
 
   try {
-    const [xmlText, selectedMap] = await Promise.all([fetchXmlText(), fetchSelectedImages()]);
-    const items = parseItems(xmlText).map(buildXmlData);
-
-    if (!items.length) {
-      renderMessage("No vehicles found for this filter.");
+    // Stock number is required for all single-vehicle displays
+    if (!stockNumber) {
+      renderMessage("Provide a stock number to display.");
       return;
     }
 
-    if (stockNumber) {
-      const normalized = normalizeStockNumber(stockNumber);
-      const match = items.find((item) => normalizeStockNumber(item.stockNumber) === normalized);
-      if (!match) {
-        renderMessage("Stock number not found in XML feed.");
-        return;
-      }
+    // Fetch data from Portal API only (no XML needed)
+    const normalized = normalizeStockNumber(stockNumber);
+    const [apiData, selectedMap] = await Promise.all([
+      fetchPortalData(normalized),
+      fetchSelectedImages(),
+    ]);
 
-      const saved = getSavedPicks(selectedMap, normalized);
-      const apiData = await fetchPortalData(normalized);
-      const merged = mergeData(match, apiData);
-      const slideImages = slides && slides.length ? slides : saved.images;
-      const slideRangeStart = slideImages.length ? 1 : slideStart;
-      const slideRangeEnd = slideImages.length ? slideImages.length : slideEnd;
-      const preferredImage = imageUrl || slideImages[0] || merged.images[0] || "";
-      const customText = note || saved.text || "";
-      const swatchColor = swatch || "";
-      const accentOne = accent1 || "";
-      const accentTwo = accent2 || "";
-
-      if (layout === "showcase") {
-        renderShowcase(
-          merged,
-          preferredImage,
-          customText,
-          apiData,
-          slideImages,
-          swatchColor,
-          accentOne,
-          accentTwo
-        );
-      } else if (layout === "landscape") {
-        renderLandscapeSingle(
-          merged,
-          preferredImage,
-          customText,
-          apiData,
-          slideImages,
-          slideRangeStart,
-          slideRangeEnd,
-          swatchColor,
-          accentOne,
-          accentTwo
-        );
-      } else {
-        renderPortrait(
-          merged,
-          preferredImage,
-          customText,
-          apiData,
-          slideImages,
-          slideRangeStart,
-          slideRangeEnd,
-          swatchColor,
-          accentOne,
-          accentTwo,
-          template
-        );
-      }
+    if (!apiData) {
+      renderMessage("Vehicle not found. Check the stock number.");
       return;
     }
+
+    // Build vehicle data from API response
+    const vehicleData = buildFromApiData(apiData);
+    const saved = getSavedPicks(selectedMap, normalized);
+    const slideImages = slides && slides.length ? slides : saved.images;
+    const slideRangeStart = slideImages.length ? 1 : slideStart;
+    const slideRangeEnd = slideImages.length ? slideImages.length : slideEnd;
+    const preferredImage = imageUrl || slideImages[0] || vehicleData.images[0] || "";
+    const customText = note || saved.text || "";
+    const swatchColor = swatch || "";
+    const accentOne = accent1 || "";
+    const accentTwo = accent2 || "";
 
     if (layout === "landscape") {
-      renderLandscapeGrid(items);
-      return;
+      renderLandscapeSingle(
+        vehicleData,
+        preferredImage,
+        customText,
+        apiData,
+        slideImages,
+        slideRangeStart,
+        slideRangeEnd,
+        swatchColor,
+        accentOne,
+        accentTwo
+      );
+    } else {
+      renderPortrait(
+        vehicleData,
+        preferredImage,
+        customText,
+        apiData,
+        slideImages,
+        slideRangeStart,
+        slideRangeEnd,
+        swatchColor,
+        accentOne,
+        accentTwo
+      );
     }
-
-    renderMessage("Provide a stock number for portrait display.");
   } catch (error) {
     console.error("Display error:", error);
     renderMessage("Failed to load display data.");
