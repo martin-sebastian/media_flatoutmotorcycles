@@ -282,8 +282,8 @@
             <div class="overflow-hidden">
               <div class="table-responsive">
                 <table id="vehiclesTable" class="table table-borderless table-hover table-sm">
-                  <colgroup>
-                    <col style="width: 40px" data-column="select">
+                  <colgroup class="my-2">
+                    <col style="width: 50px" data-column="select">
                     <col style="width: 80px" data-column="image">
                     <col style="width: 150px">
                     <col style="width: 70px" data-column="usage">
@@ -299,21 +299,23 @@
                   </colgroup>
                   <thead class="p-2">
                     <tr class="border-bottom">
-                      <th class="no-wrap text-center" data-column="select">
-                        <input type="checkbox" class="form-check-input" id="selectAllCheckbox" title="Select all">
+                      <th class="no-wrap text-center" style="max-width: 50px;" data-column="select">
+                        <div class="mb-1">
+                          <input type="checkbox" class="form-check-input p-2" id="selectAllCheckbox" title="Select all">
+                        </div>
                       </th>
-                      <th class="no-wrap text-center" data-column="image">Image</th>
-                      <th class="no-wrap text-start stock-number-header">Stock #</th>
-                      <th class="no-wrap text-center" data-column="usage">Usage</th>
-                      <th class="no-wrap text-center">Year</th>
-                      <th class="no-wrap">Make</th>
-                      <th class="no-wrap">Model</th>
-                      <th class="no-wrap" data-column="type">Type</th>
-                      <th class="no-wrap" data-column="color">Color</th>
-                      <th class="no-wrap text-center" data-column="price">Web Price</th>
-                      <th class="no-wrap text-center" data-column="photos">Photos</th>
-                      <th class="no-wrap text-center" data-column="updated">Updated</th>
-                      <th class="no-wrap text-center">Create Tags & Quotes</th>
+                      <th class="no-wrap p-2 text-center" data-column="image">Image</th>
+                      <th class="no-wrap p-2 text-start stock-number-header">Stock #</th>
+                      <th class="no-wrap p-2 text-center" data-column="usage">Usage</th>
+                      <th class="no-wrap p-2 text-center">Year</th>
+                      <th class="no-wrap p-2">Make</th>
+                      <th class="no-wrap p-2">Model</th>
+                      <th class="no-wrap p-2" data-column="type">Type</th>
+                      <th class="no-wrap p-2" data-column="color">Color</th>
+                      <th class="no-wrap p-2 text-center" data-column="price">Web Price</th>
+                      <th class="no-wrap p-2 text-center" data-column="photos">Photos</th>
+                      <th class="no-wrap p-2 text-center" data-column="updated">Updated</th>
+                      <th class="no-wrap p-2 text-center">Create Tags & Quotes</th>
                     </tr>
                   </thead>
                   <tbody>

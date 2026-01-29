@@ -1866,8 +1866,8 @@ function updateTable() {
 
 		const row = document.createElement("tr");
 		row.innerHTML = `
-      <td data-column="select" class="text-center" nowrap>
-        <input type="checkbox" class="form-check-input tv-grid-select" data-stock="${stockNumber}" title="Select for TV Grid">
+      <td data-column="select" class="text-center" style="width: 50px !important;" nowrap>
+        <input type="checkbox" class="form-check-input p-2 tv-grid-select" data-stock="${stockNumber}" title="Select for TV Grid">
       </td>
       <td data-cell="image" data-column="image" class="text-center" nowrap>
         <a href="${webURL}" target="_blank">
