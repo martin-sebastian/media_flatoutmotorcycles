@@ -284,6 +284,24 @@ function renderPrint(data, apiData, overrideImage, xmlDescription = "") {
 }
 
 /**
+ * Get all CSS rules as inline styles for PDF generation.
+ * @returns {string} Combined CSS text.
+ */
+function getAllStyles() {
+  let styles = "";
+  for (const sheet of document.styleSheets) {
+    try {
+      for (const rule of sheet.cssRules || []) {
+        styles += rule.cssText + "\n";
+      }
+    } catch (e) {
+      // Skip cross-origin stylesheets
+    }
+  }
+  return styles;
+}
+
+/**
  * Save the page as PDF using Adobe PDF Services API.
  * @param {string} filename Filename for the PDF.
  */
@@ -295,13 +313,33 @@ async function savePdf(filename) {
   }
 
   try {
-    // Get the current page URL
-    const pageUrl = window.location.href;
+    // Get the print area HTML
+    const printRoot = document.getElementById("printRoot");
+    const printContent = printRoot ? printRoot.innerHTML : "";
+    
+    // Build full HTML document with inlined styles
+    const styles = getAllStyles();
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <style>${styles}</style>
+        <style>
+          @page { size: letter; margin: 0.5in; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        </style>
+      </head>
+      <body class="print-body">
+        <main class="print-page">${printContent}</main>
+      </body>
+      </html>
+    `;
 
     const response = await fetch("/api/generate-pdf", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: pageUrl, filename }),
+      body: JSON.stringify({ html, filename }),
     });
 
     if (!response.ok) {

@@ -1,21 +1,18 @@
 /**
- * Vercel serverless function to generate PDF using Adobe PDF Services API.
- * Converts a URL to PDF and returns it for download.
+ * Vercel serverless function to generate PDF using Adobe PDF Services API v4.
+ * Converts HTML content to PDF and returns it for download.
  */
 
-const PDFServicesSdk = require("@adobe/pdfservices-node-sdk");
+const {
+  ServicePrincipalCredentials,
+  PDFServices,
+  MimeType,
+  HTMLToPDFJob,
+  HTMLToPDFParams,
+  HTMLToPDFResult,
+  PageLayout
+} = require("@adobe/pdfservices-node-sdk");
 const { Readable } = require("stream");
-
-/**
- * Convert stream to buffer.
- */
-async function streamToBuffer(stream) {
-  const chunks = [];
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-  }
-  return Buffer.concat(chunks);
-}
 
 module.exports = async function handler(req, res) {
   // Only allow POST
@@ -23,46 +20,57 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { url, filename = "document.pdf" } = req.body;
+  const { html, filename = "document.pdf" } = req.body;
 
-  if (!url) {
-    return res.status(400).json({ error: "URL is required" });
+  if (!html) {
+    return res.status(400).json({ error: "HTML content is required" });
   }
 
   try {
-    // Set up credentials from environment variables
-    const credentials = PDFServicesSdk.Credentials.servicePrincipalCredentialsBuilder()
-      .withClientId(process.env.ADOBE_CLIENT_ID)
-      .withClientSecret(process.env.ADOBE_CLIENT_SECRET)
-      .build();
+    // Create credentials from environment variables
+    const credentials = new ServicePrincipalCredentials({
+      clientId: process.env.PDF_SERVICES_CLIENT_ID || process.env.ADOBE_CLIENT_ID,
+      clientSecret: process.env.PDF_SERVICES_CLIENT_SECRET || process.env.ADOBE_CLIENT_SECRET
+    });
 
-    // Create execution context
-    const executionContext = PDFServicesSdk.ExecutionContext.create(credentials);
+    // Create PDF Services instance
+    const pdfServices = new PDFServices({ credentials });
 
-    // Create HTML to PDF operation
-    const htmlToPDFOperation = PDFServicesSdk.CreatePDF.Operation.createNew();
+    // Upload HTML as an asset
+    const inputAsset = await pdfServices.upload({
+      readStream: Readable.from([html]),
+      mimeType: MimeType.HTML
+    });
 
-    // Set the URL to convert
-    const input = PDFServicesSdk.FileRef.createFromURL(url);
-    htmlToPDFOperation.setInput(input);
+    // Set page layout options (Letter size, portrait)
+    const pageLayout = new PageLayout({
+      pageSize: "LETTER"
+    });
 
-    // Set options for PDF creation
-    const options = new PDFServicesSdk.CreatePDF.options.html.CreatePDFFromHtmlOptions.Builder()
-      .includeHeaderFooter(false)
-      .withPageLayout(
-        new PDFServicesSdk.CreatePDF.options.PageLayout.Builder()
-          .pageSize(8.5, 11) // Letter size
-          .build()
-      )
-      .build();
-    htmlToPDFOperation.setOptions(options);
+    // Create parameters
+    const params = new HTMLToPDFParams({
+      pageLayout,
+      includeHeaderFooter: false
+    });
 
-    // Execute the operation
-    const result = await htmlToPDFOperation.execute(executionContext);
+    // Create and submit the job
+    const job = new HTMLToPDFJob({ inputAsset, params });
+    const pollingURL = await pdfServices.submit({ job });
+    const pdfServicesResponse = await pdfServices.getJobResult({
+      pollingURL,
+      resultType: HTMLToPDFResult
+    });
 
-    // Get the PDF as a stream
-    const resultStream = result.getReadStream();
-    const pdfBuffer = await streamToBuffer(resultStream);
+    // Get the PDF content
+    const resultAsset = pdfServicesResponse.result.asset;
+    const streamAsset = await pdfServices.getContent({ asset: resultAsset });
+
+    // Collect stream into buffer
+    const chunks = [];
+    for await (const chunk of streamAsset.readStream) {
+      chunks.push(chunk);
+    }
+    const pdfBuffer = Buffer.concat(chunks);
 
     // Set response headers for PDF download
     res.setHeader("Content-Type", "application/pdf");
@@ -74,7 +82,7 @@ module.exports = async function handler(req, res) {
     console.error("PDF generation error:", error);
     return res.status(500).json({
       error: "PDF generation failed",
-      details: error.message,
+      details: error.message
     });
   }
 };
