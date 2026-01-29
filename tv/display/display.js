@@ -17,9 +17,16 @@ function getQueryParams() {
         .split("|")
         .map((entry) => decodeURIComponent(entry))
         .filter(Boolean);
+  // Parse stock numbers - single or comma-separated for grid
+  const stockParam = (config.stockNumber || params.get("s") || params.get("search") || "").trim();
+  const stockNumbers = stockParam.includes(",") 
+    ? stockParam.split(",").map(s => s.trim()).filter(Boolean)
+    : [stockParam].filter(Boolean);
+  
   return {
     layout: config.layout || params.get("layout") || "portrait",
-    stockNumber: (config.stockNumber || params.get("s") || params.get("search") || "").trim(),
+    stockNumber: stockNumbers[0] || "",
+    stockNumbers: stockNumbers,
     imageUrl: (config.imageUrl || params.get("img") || "").trim(),
     note: (config.note || params.get("note") || "").trim(),
     swatch: (config.swatch || params.get("swatch") || "").trim(),
@@ -51,7 +58,7 @@ function normalizeStockNumber(value) {
  */
 function applyPreviewZoom(layout) {
   if (!ROOT) return;
-  const isPortrait = layout !== "landscape";
+  const isPortrait = layout !== "landscape" && layout !== "grid";
   const targetWidth = isPortrait ? 1080 : 1920;
   const targetHeight = isPortrait ? 1920 : 1080;
   
@@ -99,7 +106,7 @@ function applyPreviewZoom(layout) {
  */
 function applyTvMode(layout) {
   if (!ROOT) return;
-  const isPortrait = layout !== "landscape";
+  const isPortrait = layout !== "landscape" && layout !== "grid";
   const targetWidth = isPortrait ? 1080 : 1920;
   const targetHeight = isPortrait ? 1920 : 1080;
   
@@ -249,108 +256,17 @@ function buildMediaList(apiImages, preferredImages) {
 }
 
 /**
- * Extract a YouTube video ID from common URL formats.
- * @param {string} url YouTube URL or ID.
- * @returns {string} Video ID or empty string.
- */
-function getYouTubeId(url) {
-  if (!url) return "";
-  if (/^[a-zA-Z0-9_-]{6,}$/.test(url) && !url.includes("/")) {
-    return url;
-  }
-  const match =
-    url.match(/[?&]v=([^&#]+)/) ||
-    url.match(/youtu\.be\/([^?&#/]+)/) ||
-    url.match(/youtube\.com\/embed\/([^?&#/]+)/);
-  return match ? match[1] : "";
-}
-
-/**
- * Get the first video URL from API video entries.
- * @param {object} video Video entry.
- * @returns {string} Video URL or empty string.
- */
-function getVideoUrl(video) {
-  if (!video) return "";
-  return safeText(
-    video.URL || video.Url || video.url || video.VideoURL || video.VideoUrl || video.Link || "",
-  );
-}
-
-/**
- * Get the first video source from API videos.
- * @param {object[]|object|null} apiVideos API video objects.
- * @returns {{type: string, src: string} | null} Video source or null.
- */
-function getVideoSource(apiVideos) {
-  const list = Array.isArray(apiVideos) ? apiVideos : apiVideos ? [apiVideos] : [];
-  const video = list.find((item) => item && getVideoUrl(item));
-  if (!video) return null;
-  const url = getVideoUrl(video);
-  const lowerUrl = url.toLowerCase();
-  const cleanUrl = lowerUrl.split("?")[0];
-  if (cleanUrl.endsWith(".mp4") || cleanUrl.endsWith(".webm") || cleanUrl.endsWith(".ogg")) {
-    return { type: "file", src: url };
-  }
-  const id = getYouTubeId(url);
-  if (id) {
-    return {
-      type: "youtube",
-      src: `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}&mute=1`,
-    };
-  }
-  return { type: "url", src: url };
-}
-
-/**
- * Render a video block for the display.
- * @param {{type: string, src: string} | null} videoSource Video source.
- * @returns {string} Video markup.
- */
-function renderVideoFrame(videoSource) {
-  if (!videoSource) return "";
-  if (videoSource.type === "file") {
-    return `
-      <div class="tv-video-frame">
-        <video
-          src="${videoSource.src}"
-          class="object-fit-contain w-100 h-100"
-          autoplay
-          muted
-          loop
-          playsinline
-        ></video>
-      </div>
-    `;
-  }
-  return `
-    <div class="tv-video-frame">
-      <iframe
-        src="${videoSource.src}"
-        title="YouTube video player"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-      ></iframe>
-    </div>
-  `;
-}
-
-/**
- * Render a video slot or fallback image.
- * @param {object[]|object|null} apiVideos API video objects.
+ * Render a video slot from API videos array (Platform 0 = YouTube).
+ * @param {object[]} videos API videos array.
  * @returns {string} Video markup or fallback image.
  */
-function renderVideoSlot(apiVideos) {
-  const videoSource = getVideoSource(apiVideos);
-  if (videoSource) {
-    return renderVideoFrame(videoSource);
+function renderVideoSlot(videos) {
+  const youtube = (videos || []).find((v) => Number(v.Platform) === 0);
+  const videoId = youtube?.URL || "";
+  if (!videoId || videoId.includes("/") || videoId.includes(".")) {
+    return `<div class="tv-video-frame"><img src="../../img/fallback.jpg" alt="Flatout Motorsports" class="object-fit-cover w-100 h-100" /></div>`;
   }
-  // No video - show static fallback image
-  return `
-    <div class="tv-video-frame">
-      <img src="../../img/fallback.jpg" alt="Flatout Motorsports" class="object-fit-cover w-100 h-100" />
-    </div>
-  `;
+  return `<div class="tv-video-frame"><iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}&mute=1" allowfullscreen></iframe></div>`;
 }
 
 /**
@@ -870,6 +786,58 @@ function renderLandscapeSingle(data, imageUrl, customText, apiData, preferredIma
 }
 
 /**
+ * Render a single grid card (mini portrait at 50% scale).
+ * @param {object} data Vehicle data.
+ * @param {object} apiData API response data.
+ * @returns {string} Card markup.
+ */
+function renderGridCard(data, apiData) {
+  const heroImage = data.images[0] || "../../img/fallback.jpg";
+  const specialValue = apiData?.QuotePrice || apiData?.SalePrice || apiData?.MSRPUnit || apiData?.MSRP || data.price;
+  const msrpValue = apiData?.Price || apiData?.MSRPUnit || apiData?.MSRP;
+  const hasDiscount = msrpValue && specialValue && Number(msrpValue) > Number(specialValue);
+  const isNew = (data.usage || "").toLowerCase() === "new";
+  const showBothPrices = isNew && hasDiscount;
+
+  return `
+    <div class="tv-grid-card">
+      <div class="tv-grid-card-image">
+        <img src="${heroImage}" alt="${data.title || 'Vehicle'}" />
+      </div>
+      <div class="tv-grid-card-info">
+        <div class="tv-grid-card-title">${data.year || ""} ${data.manufacturer || ""}</div>
+        <div class="tv-grid-card-model">${data.modelName || ""}</div>
+        <div class="tv-grid-card-stock">${data.stockNumber || ""}</div>
+        ${showBothPrices
+          ? `<div class="tv-grid-card-msrp">${formatPrice(msrpValue)}</div>
+             <div class="tv-grid-card-price">${formatPrice(specialValue)}</div>`
+          : `<div class="tv-grid-card-price">${formatPrice(specialValue || msrpValue)}</div>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Render a grid of 10 vehicles (5x2 layout).
+ * @param {object[]} vehicles Array of {data, apiData} objects.
+ */
+function renderGrid(vehicles) {
+  const cards = vehicles.map(({ data, apiData }) => renderGridCard(data, apiData)).join("");
+  
+  setDisplayContent(`
+    <div class="tv-layout-grid">
+      <div class="tv-grid-header">
+        <img src="../../img/fom-app-logo-01.svg" alt="Flatout Motorsports" class="tv-grid-logo" />
+      </div>
+      <div class="tv-grid-container">
+        ${cards}
+      </div>
+    </div>
+  `);
+}
+
+/**
  * Render a fallback message.
  * @param {string} message Message to display.
  */
@@ -884,6 +852,7 @@ async function initDisplay() {
   const {
     layout,
     stockNumber,
+    stockNumbers,
     imageUrl,
     note,
     slideStart,
@@ -905,13 +874,41 @@ async function initDisplay() {
   }
 
   try {
-    // Stock number is required for all single-vehicle displays
+    // Grid layout: fetch multiple stock numbers
+    if (layout === "grid") {
+      if (!stockNumbers.length) {
+        renderMessage("Provide stock numbers for grid display (comma-separated).");
+        return;
+      }
+      
+      // Fetch all stock numbers in parallel
+      const apiResults = await Promise.all(
+        stockNumbers.slice(0, 10).map(s => fetchPortalData(normalizeStockNumber(s)))
+      );
+      
+      // Build vehicle data for each
+      const vehicles = apiResults
+        .filter(apiData => apiData)
+        .map(apiData => ({
+          data: buildFromApiData(apiData),
+          apiData: apiData,
+        }));
+      
+      if (!vehicles.length) {
+        renderMessage("No vehicles found. Check stock numbers.");
+        return;
+      }
+      
+      renderGrid(vehicles);
+      return;
+    }
+
+    // Single vehicle: portrait or landscape
     if (!stockNumber) {
       renderMessage("Provide a stock number to display.");
       return;
     }
 
-    // Fetch data from Portal API only (no XML needed)
     const normalized = normalizeStockNumber(stockNumber);
     const [apiData, selectedMap] = await Promise.all([
       fetchPortalData(normalized),
@@ -923,7 +920,6 @@ async function initDisplay() {
       return;
     }
 
-    // Build vehicle data from API response
     const vehicleData = buildFromApiData(apiData);
     const saved = getSavedPicks(selectedMap, normalized);
     const slideImages = slides && slides.length ? slides : saved.images;
