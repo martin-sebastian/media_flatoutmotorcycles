@@ -791,17 +791,34 @@ body.tv-body {
   color: #6b7280;
 }
 
-.tv-grid-card-msrp {
+.tv-grid-card-pricing {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tv-grid-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
   font-size: 0.75rem;
   color: #9ca3af;
+}
+
+.tv-grid-card-msrp {
   text-decoration: line-through;
-  margin-top: auto;
 }
 
 .tv-grid-card-price {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #f5f5f5;
+}
+
+.tv-grid-card-savings {
+  color: #4ade80;
+  font-weight: 600;
 }
 
 .tv-qr {

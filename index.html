@@ -179,9 +179,12 @@
               <div class="h6">
                 <span class="text-secondary small">Showing:</span> <span class="mx-1 small" id="rowCountDisplay"></span>
               </div>
-              <div id="button-group-right" class="mb-1 d-flex flex-row justify-content-between align-items-center">
+              <div id="button-group-right" class="mb-1 d-flex flex-row justify-content-between align-items-center gap-2">
                 <button type="button" class="btn btn-danger btn-sm rounded-3 my-2 px-3" title="Create custom label" onclick="openKeyTagsByStockNumberModal('${stockNumber}')">
                   <i class="bi bi-plus-lg h6 my-1 ms-1"></i> <span class="mx-1 pe-2 fw-normal">Custom Label</span>
+                </button>
+                <button type="button" id="forceRefreshBtn" class="btn btn-outline-secondary btn-sm rounded-3 my-2 px-3" title="Refresh inventory data">
+                  <i class="bi bi-arrow-clockwise h6 my-1"></i> <span class="mx-1 pe-2 fw-normal">Refresh</span>
                 </button>
               </div>
             </div>

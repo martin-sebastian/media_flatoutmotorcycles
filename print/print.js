@@ -49,12 +49,8 @@ async function fetchPortalData(stockNumber) {
  * @returns {object} Normalized data object.
  */
 function buildDisplayData(apiData) {
-  // Keep full image URLs exactly as returned from API
   const images = (apiData?.Images || []).map((img) => img.ImgURL).filter(Boolean);
   const uniqueImages = [...new Set(images)];
-  
-  console.log("API Images:", apiData?.Images);
-  console.log("Processed images:", uniqueImages);
 
   return {
     title: [apiData?.ModelYear, apiData?.Manufacturer, apiData?.ModelName].filter(Boolean).join(" "),
@@ -135,19 +131,22 @@ function renderFeatureCards(items) {
 /**
  * Render line items list for fees/taxes.
  * @param {object[]} items Items list.
+ * @param {boolean} isCredit If true, show amounts as negative (for rebates/discounts).
  * @returns {string} List markup.
  */
-function renderLineItems(items) {
+function renderLineItems(items, isCredit = false) {
   const rows = (items || [])
     .filter((item) => item && item.Description)
-    .map(
-      (item) => `
-        <div class="d-flex justify-content-between">
+    .map((item) => {
+      const amount = Number(item.Amount) || 0;
+      const displayAmount = isCredit ? -Math.abs(amount) : amount;
+      return `
+        <div class="d-flex justify-content-between ${isCredit ? 'text-success fw-semibold' : ''}">
           <span>${item.Description}</span>
-          <span>${formatPrice(item.Amount)}</span>
+          <span>${formatPrice(displayAmount)}</span>
         </div>
-      `
-    )
+      `;
+    })
     .join("");
   return rows ? `<div class="print-list">${rows}</div>` : "";
 }
@@ -159,7 +158,7 @@ function renderLineItems(items) {
  * @param {string} overrideImage Optional override image.
  */
 function renderPrint(data, apiData, overrideImage) {
-  const priceValue = apiData?.QuotePrice || apiData?.SalePrice || apiData?.Price || data.price;
+  const salePrice = apiData?.QuotePrice || apiData?.SalePrice || apiData?.Price || data.price;
   const msrpValue = apiData?.MSRPUnit || apiData?.MSRP || data.msrp;
   const paymentValue = apiData?.Payment || apiData?.PaymentAmount;
   const totalValue = apiData?.OTDPrice;
@@ -168,10 +167,12 @@ function renderPrint(data, apiData, overrideImage) {
   const descriptionText = stripHtml(data.description);
   const featureMarkup = renderFeatureCards(apiData?.AccessoryItems || apiData?.MUItems);
   const feesMarkup = renderLineItems(apiData?.OTDItems || []);
+  const rebatesMarkup = renderLineItems(apiData?.MfgRebatesFrontEnd || [], true);
+  const discountsMarkup = renderLineItems(apiData?.DiscountItems || [], true);
 
   // Pricing logic: if new and MSRP > price, show both
   const isNew = (data.usage || "").toLowerCase() === "new";
-  const hasDiscount = msrpValue && priceValue && Number(msrpValue) > Number(priceValue);
+  const hasDiscount = msrpValue && salePrice && Number(msrpValue) > Number(salePrice);
   const showBothPrices = isNew && hasDiscount;
 
   ROOT.innerHTML = `
@@ -181,13 +182,24 @@ function renderPrint(data, apiData, overrideImage) {
     </div>
 
     <div class="row g-3 mt-3">
-      <div class="col-8">
+      <div class="col-7">
         ${heroImage ? `<img class="print-hero" src="${heroImage}" alt="Vehicle image" />` : ""}
       </div>
-      <div class="col-4">
+      <div class="col-5">
         <div class="print-panel">
-          ${showBothPrices ? `<div class="print-msrp">${formatPrice(msrpValue)}</div>` : ""}
-          <div class="print-price">${formatPrice(showBothPrices ? priceValue : (priceValue || msrpValue))}</div>
+          ${showBothPrices 
+            ? `<div class="print-price-row">
+                 <span class="print-label">MSRP</span>
+                 <span class="print-msrp">${formatPrice(msrpValue)}</span>
+               </div>
+               <div class="print-price-row">
+                 <span class="print-label">Sale Price</span>
+                 <span class="print-price">${formatPrice(salePrice)}</span>
+               </div>`
+            : `<div class="print-price">${formatPrice(salePrice || msrpValue)}</div>`
+          }
+          ${rebatesMarkup ? `<div class="mt-2">${rebatesMarkup}</div>` : ""}
+          ${discountsMarkup ? `<div class="mt-1">${discountsMarkup}</div>` : ""}
           ${paymentValue ? `<div class="print-sub mt-2">Payment ${formatPrice(paymentValue)}/mo</div>` : ""}
           <div class="print-meta mt-3">Stock: ${data.stockNumber || "N/A"}</div>
           <div class="print-meta">VIN: ${data.vin || "N/A"}</div>
@@ -233,6 +245,50 @@ function renderPrint(data, apiData, overrideImage) {
 }
 
 /**
+ * Save the print page as a PDF file.
+ * @param {string} filename Filename for the PDF.
+ */
+function savePdf(filename) {
+  const element = document.getElementById("printRoot");
+  if (!element || !window.html2pdf) {
+    alert("PDF generation not available");
+    return;
+  }
+
+  const btn = document.getElementById("savePdfBtn");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Generating...';
+  }
+
+  const opt = {
+    margin: 0.35,
+    filename: filename,
+    image: { type: "jpeg", quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+  };
+
+  html2pdf()
+    .set(opt)
+    .from(element)
+    .save()
+    .then(() => {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-file-earmark-pdf me-2"></i>Save PDF';
+      }
+    })
+    .catch((err) => {
+      console.error("PDF save error:", err);
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-file-earmark-pdf me-2"></i>Save PDF';
+      }
+    });
+}
+
+/**
  * Initialize the print page.
  */
 async function initPrint() {
@@ -251,6 +307,14 @@ async function initPrint() {
 
     const data = buildDisplayData(apiData);
     renderPrint(data, apiData, imageUrl);
+
+    // Wire up save PDF button
+    const savePdfBtn = document.getElementById("savePdfBtn");
+    if (savePdfBtn) {
+      const nameParts = [data.stockNumber, data.year, data.manufacturer, data.modelName].filter(Boolean);
+      const filename = `${nameParts.join("-").replace(/\s+/g, "-")}.pdf`;
+      savePdfBtn.addEventListener("click", () => savePdf(filename));
+    }
   } catch (error) {
     console.error("Print error:", error);
     ROOT.innerHTML = `<div class="text-center text-secondary py-5">Failed to load print data.</div>`;

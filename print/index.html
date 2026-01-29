@@ -1,26 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vehicle Print</title>
-    <link rel="stylesheet" href="../css/bootstrap.css" />
-    <link rel="stylesheet" href="../css/bootstrap-icons.css" />
-    <link rel="stylesheet" href="../css/style.css" />
-    <link rel="stylesheet" href="./print.css" />
-  </head>
-  <body class="print-body">
-    <div class="print-toolbar screen-only">
-      <button class="btn btn-danger" type="button" onclick="window.print()">
-        <i class="bi bi-printer me-2"></i>Print
-      </button>
-    </div>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Vehicle Print</title>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<link rel="stylesheet" href="../css/bootstrap-icons.css" />
+		<link rel="stylesheet" href="../css/style.css" />
+		<link rel="stylesheet" href="./print.css" />
+	</head>
+	<body class="print-body">
+		<div class="print-toolbar screen-only">
+			<button
+				class="btn btn-danger me-2"
+				type="button"
+				onclick="window.print()">
+				<i class="bi bi-printer me-2"></i>Print
+			</button>
+			<button class="btn btn-primary" type="button" id="savePdfBtn">
+				<i class="bi bi-file-earmark-pdf me-2"></i>Save PDF
+			</button>
+		</div>
 
-    <main class="print-page" id="printRoot">
-      <div class="text-center text-secondary py-5">Loading print layout…</div>
-    </main>
+		<main class="print-page" id="printRoot">
+			<div class="text-center text-secondary py-5">Loading print layout…</div>
+		</main>
 
-    <script src="../js/qrcode.min.js"></script>
-    <script src="./print.js"></script>
-  </body>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+		<script src="../js/qrcode.min.js"></script>
+		<script src="./print.js"></script>
+	</body>
 </html>

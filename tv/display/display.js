@@ -793,11 +793,16 @@ function renderLandscapeSingle(data, imageUrl, customText, apiData, preferredIma
  */
 function renderGridCard(data, apiData) {
   const heroImage = data.images[0] || "../../img/fallback.jpg";
-  const specialValue = apiData?.QuotePrice || apiData?.SalePrice || apiData?.MSRPUnit || apiData?.MSRP || data.price;
+  const salePrice = apiData?.QuotePrice || apiData?.SalePrice || apiData?.MSRPUnit || apiData?.MSRP || data.price;
   const msrpValue = apiData?.Price || apiData?.MSRPUnit || apiData?.MSRP;
-  const hasDiscount = msrpValue && specialValue && Number(msrpValue) > Number(specialValue);
+  const hasDiscount = msrpValue && salePrice && Number(msrpValue) > Number(salePrice);
   const isNew = (data.usage || "").toLowerCase() === "new";
   const showBothPrices = isNew && hasDiscount;
+
+  // Calculate total rebates and discounts
+  const rebates = (apiData?.MfgRebatesFrontEnd || []).reduce((sum, item) => sum + (Number(item.Amount) || 0), 0);
+  const discounts = (apiData?.DiscountItems || []).reduce((sum, item) => sum + (Number(item.Amount) || 0), 0);
+  const totalSavings = rebates + discounts;
 
   return `
     <div class="tv-grid-card">
@@ -808,11 +813,14 @@ function renderGridCard(data, apiData) {
         <div class="tv-grid-card-title">${data.year || ""} ${data.manufacturer || ""}</div>
         <div class="tv-grid-card-model">${data.modelName || ""}</div>
         <div class="tv-grid-card-stock">${data.stockNumber || ""}</div>
-        ${showBothPrices
-          ? `<div class="tv-grid-card-msrp">${formatPrice(msrpValue)}</div>
-             <div class="tv-grid-card-price">${formatPrice(specialValue)}</div>`
-          : `<div class="tv-grid-card-price">${formatPrice(specialValue || msrpValue)}</div>`
-        }
+        <div class="tv-grid-card-pricing">
+          ${showBothPrices
+            ? `<div class="tv-grid-card-row"><span>MSRP</span><span class="tv-grid-card-msrp">${formatPrice(msrpValue)}</span></div>
+               <div class="tv-grid-card-row"><span>Sale</span><span class="tv-grid-card-price">${formatPrice(salePrice)}</span></div>`
+            : `<div class="tv-grid-card-row"><span>Price</span><span class="tv-grid-card-price">${formatPrice(salePrice || msrpValue)}</span></div>`
+          }
+          ${totalSavings > 0 ? `<div class="tv-grid-card-row tv-grid-card-savings"><span>Savings</span><span>-${formatPrice(totalSavings)}</span></div>` : ""}
+        </div>
       </div>
     </div>
   `;

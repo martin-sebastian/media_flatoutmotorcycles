@@ -8,6 +8,8 @@ body.print-body {
   color: #111;
   font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
   margin: 0;
+  overflow-y: auto;
+  min-height: 100vh;
 }
 
 .print-toolbar {
@@ -63,14 +65,26 @@ body.print-body {
   margin-bottom: 8px;
 }
 
+.print-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.print-label {
+  font-size: 12px;
+  color: #666;
+}
+
 .print-msrp {
-  font-size: 14px;
+  font-size: 16px;
   color: #888;
   text-decoration: line-through;
 }
 
 .print-price {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: #c61f2b;
 }
@@ -78,6 +92,10 @@ body.print-body {
 .print-phone {
   font-size: 12px;
   color: #555;
+}
+
+.text-success {
+  color: #198754;
 }
 
 .print-sub {

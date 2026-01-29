@@ -606,9 +606,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 		}
 	});
 
-	// Show placeholder while loading data
-	showPlaceholder();
-
 	// Load user preferences before fetching data
 	State.loadState();
 
@@ -664,6 +661,11 @@ function handleGlobalClicks(event) {
 	// Handle theme toggle
 	if (target.closest("#toggleThemeButton")) {
 		toggleTheme();
+	}
+
+	// Handle force refresh button
+	if (target.closest("#forceRefreshBtn")) {
+		forceRefresh();
 	}
 }
 
@@ -753,6 +755,40 @@ function buildXmlRequestUrl(baseUrl) {
 	return url.toString();
 }
 
+/**
+ * Force a fresh API call by clearing cache first.
+ */
+async function forceRefresh() {
+	console.log("Force refresh - clearing cache...");
+	
+	// Show loading state on button
+	const btn = document.getElementById("forceRefreshBtn");
+	const originalContent = btn?.innerHTML;
+	if (btn) {
+		btn.disabled = true;
+		btn.innerHTML = '<i class="bi bi-arrow-clockwise h6 my-1 spin"></i> <span class="mx-1 pe-2 fw-normal">Loading...</span>';
+	}
+	
+	// Clear cache from both localStorage and memory
+	try {
+		localStorage.removeItem("vehiclesCache");
+		localStorage.removeItem("vehiclesCacheTimestamp");
+	} catch (e) {
+		console.log("Could not clear localStorage cache");
+	}
+	memoryStorage.vehiclesCache = null;
+	memoryStorage.vehiclesCacheTimestamp = null;
+	
+	// Fetch fresh data
+	await fetchData();
+	
+	// Restore button state
+	if (btn) {
+		btn.disabled = false;
+		btn.innerHTML = originalContent;
+	}
+}
+
 async function fetchData() {
 	try {
 		// Add mobile debugging info
@@ -779,7 +815,7 @@ async function fetchData() {
 			cacheTimestamp = localStorage.getItem("vehiclesCacheTimestamp");
 		}
 
-		const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+		const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 		// Use cached data if it exists and is less than 5 minutes old
 		if (cache && cacheTimestamp) {
@@ -812,6 +848,9 @@ async function fetchData() {
 
 		// Fetch fresh data if cache is missing or expired
 		console.log("Fetching fresh XML data...");
+		
+		// Show skeleton only when making API call
+		showPlaceholder();
 
 		try {
 			// Set a longer timeout on mobile
@@ -2344,6 +2383,12 @@ function updateTable() {
 					<a class="dropdown-item pe-5" href="javascript:void(0);" onclick="openQuoteModal('${stockNumber}')">
 					<i class="bi bi-card-heading dropdown-icon small me-1"></i>
 					Print Quote</a>
+				</li>
+
+				<li class="small">
+					<a class="dropdown-item pe-5" href="javascript:void(0);" onclick="window.location.href = 'print/?s=${stockNumber}'">
+					<i class="bi bi-card-heading dropdown-icon small me-1"></i>
+					Print PDF</a>
 				</li>
 				
 				<li><hr class="dropdown-divider m-0"></li>
