@@ -42,6 +42,52 @@ let memoryStorage = {
 	tablePagination: null,
 };
 
+// Global state for table data and pagination
+const State = {
+	allItems: [],
+	filteredItems: [],
+	currentItems: [],
+	pagination: {
+		currentPage: 1,
+		pageSize: 25,
+		totalPages: 1,
+	},
+	saveState() {
+		const stateToSave = {
+			currentPage: this.pagination.currentPage,
+			pageSize: this.pagination.pageSize,
+		};
+		try {
+			if (checkLocalStorageAvailability().available) {
+				localStorage.setItem("tablePagination", JSON.stringify(stateToSave));
+			} else {
+				memoryStorage.tablePagination = stateToSave;
+			}
+		} catch (e) {
+			memoryStorage.tablePagination = stateToSave;
+		}
+	},
+	loadState() {
+		try {
+			let parsedState;
+			if (checkLocalStorageAvailability().available) {
+				const savedState = localStorage.getItem("tablePagination");
+				if (savedState) {
+					parsedState = JSON.parse(savedState);
+				}
+			} else if (memoryStorage.tablePagination) {
+				parsedState = memoryStorage.tablePagination;
+			}
+			if (parsedState) {
+				this.pagination.currentPage = parsedState.currentPage || 1;
+				this.pagination.pageSize = parsedState.pageSize || 25;
+			}
+		} catch (e) {
+			console.error("Error loading saved state:", e);
+		}
+	},
+};
+
 // Return the active filter group based on Bootstrap md breakpoint.
 function getActiveFilterGroupName() {
 	return window.matchMedia("(min-width: 768px)").matches ? "desktop" : "mobile";
@@ -1046,6 +1092,8 @@ async function processXMLData(xmlDoc) {
 			item.getElementsByTagName("model_name")[0]?.textContent || "N/A";
 		const modelType =
 			item.getElementsByTagName("model_type")[0]?.textContent || "N/A";
+		const modelCode =
+			item.getElementsByTagName("model_code")[0]?.textContent || "N/A";
 		const color = item.getElementsByTagName("color")[0]?.textContent || "N/A";
 		const usage = item.getElementsByTagName("usage")[0]?.textContent || "N/A";
 		const updated =
@@ -1078,6 +1126,7 @@ async function processXMLData(xmlDoc) {
 			year,
 			modelName,
 			modelType,
+			modelCode,
 			color,
 			usage,
 			updated,
@@ -1267,13 +1316,10 @@ function updateThemeIcon(theme) {
 	}
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-	// Initialize the table with row count on page load
-	updateRowCount();
-});
-
 // Function to update row count (initial and filtered)
 function updateRowCount() {
+	// Guard against being called before data is loaded
+	if (!State.allItems || !State.allItems.length) return;
 	// Update rowCountDisplay with both visible rows and total rows
 	const rowCountElement = document.getElementById("rowCountDisplay");
 	if (rowCountElement) {
@@ -1302,7 +1348,15 @@ document.addEventListener("DOMContentLoaded", () => {
 			if (stockNumber) {
 				// Update the modal title with the stock number
 				const modalTitle = document.getElementById("keytagModalLabel");
-				modalTitle.innerHTML = stockNumber;
+				if (modalTitle) modalTitle.innerHTML = stockNumber;
+
+				// Load saved vertical toggle state
+				const verticalToggle = document.getElementById("verticalKeyTagSwitch");
+				const savedState = localStorage.getItem("verticalKeyTagState");
+				if (verticalToggle) {
+					verticalToggle.checked = savedState === "true";
+					toggleVerticalKeyTag();
+				}
 
 				// Call the keyTag function and pass the stock number
 				keyTag(stockNumber);
@@ -1311,508 +1365,107 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		}
 
-		// Handle printTag button click
+		// Handle printKeyTagBtn button click
+		if (event.target.closest("#printKeyTagBtn")) {
+			printKeyTags();
+		}
+
+		// Handle printTag button click (legacy)
 		if (event.target.closest("#printTag")) {
-			window.print(); // Trigger print dialog
+			window.print();
 		}
 	});
+
+	// Handle vertical key tag toggle switch
+	const verticalToggle = document.getElementById("verticalKeyTagSwitch");
+	if (verticalToggle) {
+		verticalToggle.addEventListener("change", toggleVerticalKeyTag);
+	}
 });
 
 document.addEventListener("DOMContentLoaded", () => {
 	initializeModalFocusGuards();
 });
 
-// Function to fetch the data
-async function keyTag(stockNumber) {
-	try {
-		// Optionally hide any previous error messages
-		document.getElementById("message").innerHTML = "";
+/**
+ * Render key tag using cached XML data (no API call).
+ * Uses KeyTagComponent from key-tag.js.
+ * @param {string} stockNumber - Stock number to look up.
+ */
+function keyTag(stockNumber) {
+	const messageEl = document.getElementById("keytagMessage");
+	const horizontalContainer = document.getElementById("keytagHorizontal");
+	const verticalContainer = document.getElementById("keytagVertical");
 
-		// Fetch data from the API
-		const response = await fetch(
-			"https://newportal.flatoutmotorcycles.com/portal/public/api/majorunit/stocknumber/" +
-				stockNumber,
-		);
+	// Clear previous message
+	if (messageEl) messageEl.innerHTML = "";
 
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-
-		const data = await response.json();
-		console.log("Data fetched from portal successfully:", data);
-
-		if (typeof data.StockNumber !== "undefined") {
-			// Populate the modal with new data
-			document.getElementById("modelUsage").innerHTML = data.Usage || "N/A";
-			document.getElementById("stockNumber").innerHTML =
-				data.StockNumber || "N/A";
-			document.getElementById("modelYear").innerHTML = data.ModelYear || "N/A";
-			document.getElementById("manufacturer").innerHTML =
-				data.Manufacturer || "N/A";
-			document.getElementById("modelName").innerHTML = data.ModelName || "N/A";
-			document.getElementById("modelCode").innerHTML = data.ModelCode || "N/A";
-			document.getElementById("modelColor").innerHTML = data.Color || "N/A";
-			document.getElementById("modelVin").innerHTML = data.VIN || "N/A";
-
-			// Check if elements exist before setting innerHTML
-			const modelYearVertical = document.getElementById("modelYearVertical");
-			const manufacturerVertical = document.getElementById(
-				"manufacturerVertical",
-			);
-			const modelNameVertical = document.getElementById("modelNameVertical");
-			const modelVinVertical = document.getElementById("modelVinVertical");
-
-			if (modelYearVertical) {
-				modelYearVertical.innerHTML = data.ModelYear || "N/A";
-				console.log("modelYearVertical updated:", modelYearVertical.innerHTML);
-			} else {
-				console.error("Element with ID 'modelYearVertical' not found.");
-			}
-
-			if (manufacturerVertical) {
-				manufacturerVertical.innerHTML = data.Manufacturer || "N/A";
-				console.log(
-					"manufacturerVertical updated:",
-					manufacturerVertical.innerHTML,
-				);
-			} else {
-				console.error("Element with ID 'manufacturerVertical' not found.");
-			}
-
-			if (modelNameVertical) {
-				modelNameVertical.innerHTML = data.ModelName || "N/A";
-				console.log("modelNameVertical updated:", modelNameVertical.innerHTML);
-			} else {
-				console.error("Element with ID 'modelNameVertical' not found.");
-			}
-
-			if (modelVinVertical) {
-				modelVinVertical.innerHTML = data.VIN || "N/A";
-				console.log("modelVinVertical updated:", modelVinVertical.innerHTML);
-			} else {
-				console.error("Element with ID 'modelVinVertical' not found.");
-			}
-
-			// Make sure keytagContainer is visible if previously hidden
-			const keytagContainer = document.getElementById("keytagContainer");
-			keytagContainer.classList.remove("hidden");
-
-			const keytagVerticalContainer = document.getElementById(
-				"keytagVerticalContainer",
-			);
-			keytagVerticalContainer.classList.remove("hidden");
-		} else {
-			// Hide key tag container and show error message if no data available
-			const keytagContainer = document.getElementById("keytagContainer");
-			keytagContainer.classList.add("hidden");
-
-			const keytagVerticalContainer = document.getElementById(
-				"keytagVerticalContainer",
-			);
-			keytagVerticalContainer.classList.add("hidden");
-
-			document.getElementById("message").innerHTML = `
-        <div class="warning-icon-container text-center">
-          <i class="bi bi-exclamation-diamond"></i>
-        </div>
-        <p class="error-message">
-          No data available, click 
-          <i class="bi bi-exclamation-diamond"></i> icon next to the print button for instructions.
-        </p>`;
-		}
-	} catch (error) {
-		console.log(error.message);
-	}
-}
-
-function toggleVerticalKeyTag(event) {
-	const keytagContainer = document.getElementById("keytagContainer");
-	const keytagVerticalContainer = document.getElementById(
-		"keytagVerticalContainer",
+	// Find vehicle in cached data
+	const vehicle = State.allItems.find(
+		(item) => (item.stockNumber || "").toUpperCase() === stockNumber.toUpperCase()
 	);
-	const keytagContainerTwo = document.getElementById("keytagContainerTwo");
 
-	// Save the state to localStorage
-	localStorage.setItem("verticalKeyTagState", event.target.checked);
-
-	if (event.target.checked) {
-		// Show both formats when toggle is on
-		keytagVerticalContainer.classList.remove("visually-hidden");
-		keytagContainer.classList.remove("visually-hidden");
-		if (keytagContainerTwo) {
-			keytagContainerTwo.classList.remove("visually-hidden");
+	if (!vehicle) {
+		// Show placeholder and error message
+		if (window.KeyTagComponent) {
+			KeyTagComponent.clear(horizontalContainer, "horizontal");
+			KeyTagComponent.clear(verticalContainer, "vertical");
 		}
-	} else {
-		// Show only horizontal when toggle is off
-		keytagVerticalContainer.classList.add("visually-hidden");
-		keytagContainer.classList.remove("visually-hidden");
-		if (keytagContainerTwo) {
-			keytagContainerTwo.classList.add("visually-hidden");
+		if (messageEl) {
+			messageEl.innerHTML = `<div class="text-warning"><i class="bi bi-exclamation-triangle me-2"></i>Stock number not found in inventory.</div>`;
 		}
-	}
-}
-
-// Get the elements
-const zoomElement = document.getElementById("keytagContainer");
-const zoomElementVertical = document.getElementById("keytagVerticalContainer");
-const zoomInBtn = document.getElementById("zoomInBtn");
-const zoomOutBtn = document.getElementById("zoomOutBtn");
-
-// Zoom In button event listener
-zoomInBtn.addEventListener("click", function () {
-	// Remove the zoom-1 class and add the zoom-2 class
-	zoomElement.classList.remove("zoom-0");
-	zoomElement.classList.remove("zoom-2");
-	zoomElementVertical.classList.remove("zoom-1");
-	zoomElement.classList.add("zoom-1");
-	zoomElementVertical.classList.add("zoom-1");
-});
-
-// Zoom Out button event listener
-zoomOutBtn.addEventListener("click", function () {
-	// Remove the zoom-3 class and add the zoom-1 class
-	zoomElement.classList.remove("zoom-1");
-	zoomElement.classList.remove("zoom-2");
-	zoomElement.classList.add("zoom-0");
-	zoomElementVertical.classList.remove("zoom-1");
-	zoomElementVertical.classList.remove("zoom-2");
-	zoomElementVertical.classList.add("zoom-0");
-});
-
-function printKeyTag(event) {
-	if (event) {
-		event.preventDefault();
-		event.stopPropagation();
-	}
-
-	const keytagContainer = document.getElementById("keytagContainer");
-	const verticalToggle = document.querySelector(
-		'input[type="checkbox"][onchange="toggleVerticalKeyTag(event)"]',
-	);
-	const showBoth = verticalToggle && verticalToggle.checked;
-
-	if (!keytagContainer) {
-		console.error("Key tag container not found");
 		return;
 	}
 
-	const printFrame = document.getElementById("printFrame");
-	const printDocument =
-		printFrame.contentDocument || printFrame.contentWindow.document;
+	// Normalize data for the component
+	const data = {
+		StockNumber: vehicle.stockNumber || "",
+		Usage: vehicle.usage || "",
+		ModelYear: vehicle.year || "",
+		Manufacturer: vehicle.manufacturer || "",
+		ModelName: vehicle.modelName || "",
+		ModelCode: vehicle.modelCode || "",
+		Color: vehicle.color || "",
+		VIN: vehicle.vin || "",
+	};
 
-	const printContent = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Print Key Tag</title>
-        <style>
-          @page {
-            outline: 0px solid red;
-            size: 1.625in 2.125in;
-            margin: 0;
-            scale: 1;
-            @top {
-              content: ""; /* No content for header */
-            }
-            @bottom {
-              content: ""; /* No content for footer */
-            }
-          }
-          body {
-            font-family: Arial, sans-serif;
-            font-size: 8pt;
-            font-weight: 600;
-            margin: 0;
-            padding: 0.051in;
-            width: 1.625in;
-            height: 2.125in;
-            overflow: hidden;
-          }
-          #keytagContainer {
-            text-align: center;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 0.1in;
-            padding: 0.0625in;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
-          }
-          #keytagContainerTwo {
-            position: relative;
-            top: 0.06in;
-            text-align: center;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 0.1in;
-            padding: 0.0625in;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
-          }
-          #keytagContainer div {
-            margin: 0;
-            padding: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
-          #modelUsage {
-            font-weight: bold;
-            font-size: 10pt;
-            line-height: 12px;
-            text-transform: uppercase;
-            border-bottom: 1px solid #ddd;
-          }
-          #stockNumber {
-            font-weight: bold;
-            font-size: 16pt;
-            border-bottom: 1px solid #ddd;
-          }
-          #modelYear {
-            font-size: 10pt;
-            border-bottom: 1px solid #ddd;
-          }
-          #manufacturer {
-            font-size: 10pt;
-            border-bottom: 1px solid #ddd;
-          }
-          #modelName {
-            font-size: 9pt;
-            border-bottom: 1px solid #eee;
-            white-space: nowrap;
-            overflow: hidden;
-          }
-          #modelCode {
-            font-size: 8pt;
-            border-bottom: 1px solid #eee;
-          }
-          #modelColor {
-            font-size: 8pt;
-            border-bottom: 1px solid #eee;
-          }
-          #modelVin {
-            width: 1.5in;
-            font-size: 8pt;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-          }
-          #modelUsage::after {
-            display: block;
-            text-align: left;
-            margin-bottom: -1px;
-            margin-top: -4px;
-            content: "USAGE";
-            font-size: 6px !important;
-            line-height: 8px;
-            color: #ddd;
-          }
-          #stockNumber::after {
-            display: block;
-            text-align: left;
-            margin-bottom: -1px;
-            margin-top: -4px;
-            content: "STOCK NUMBER";
-            font-size: 6px !important;
-            line-height: 8px;
-            color: #ddd;
-          }
-          #modelYear::after {
-            display: block;
-            text-align: left;
-            margin-bottom: -1px;
-            margin-top: -4px;
-            content: "YEAR";
-            font-size: 6px !important;
-            line-height: 8px;
-            color: #ddd;
-          }
-          #manufacturer::after {
-            display: block;
-            text-align: left;
-            margin-bottom: -1px;
-            margin-top: -4px;
-            content: "MANUFACTURER";
-            font-size: 6px !important;
-            line-height: 8px;
-            color: #ddd;
-          }
-          #modelName::after {
-            display: block;
-            text-align: left;
-            margin-bottom: -1px;
-            margin-top: -4px;
-            content: "MODEL";
-            font-size: 6px !important;
-            line-height: 8px;
-            color: #ddd;
-          }
-          #modelCode::after {
-            display: block;
-            text-align: left;
-            margin-bottom: -1px;
-            margin-top: -4px;
-            content: "CODE";
-            font-size: 6px !important;
-            line-height: 8px;
-            color: #ddd;
-          }
-          #modelColor::after {
-            display: block;
-            text-align: left;
-            margin-bottom: -1px;
-            margin-top: -4px;
-            content: "COLOR";
-            font-size: 6px !important;
-            line-height: 8px;
-            color: #ddd;
-          }
-          #modelVin::after {
-            display: block;
-            text-align: left;
-            margin-bottom: -1px;
-            margin-top: -4px;
-            content: "VIN";
-            font-size: 6px !important;
-            line-height: 8px;
-            color: #ddd;
-          }
-          /* New styles for the rotated label */
-          .rotated-label-text {
-            display: block;
-            height: 100%;
-            writing-mode: vertical-rl;
-            font-size: 16pt;
-            line-height: 18pt;
-            font-weight: 700;
-            color: black;
-          }
-          .label-text-lower-vin {
-            font-size: 12pt;
-            line-height: 12pt;
-            font-weight: 500;
-            margin-right: -10px;
-            padding: 0;
-            color: black;
-            white-space: nowrap;
-            overflow: hidden;
-          }
-          .label-text-lower-model {
-            font-size: 9pt;
-            line-height: 9pt;
-            font-weight: 700;
-            color: black;
-            padding: 0;
-            margin-right: -10px;
-          }
-          /* Add display none for visually-hidden class */
-          .visually-hidden {
-            display: none !important;
-          }
-          .placeholder-glow {
-            contain: content;
-          }
-          tr {
-            contain: layout style;
-          }
-          /* Use transform instead of other properties for animations */
-          .action-button {
-            transition: transform 0.2s;
-            will-change: transform;
-          }
+	// Render using component
+	if (window.KeyTagComponent) {
+		KeyTagComponent.render(data, horizontalContainer);
+		KeyTagComponent.renderVertical(data, verticalContainer);
+	}
 
-          .action-button:hover {
-            transform: scale(1.05);
-          }
-        </style>
-      </head>
-      <body>
-        ${
-					showBoth ?
-						`
-          <div id="keytagContainer" style="margin-bottom: 0.1in;">
-            <div id="modelUsage">${keytagContainer.querySelector("#modelUsage").textContent}</div>
-            <div id="stockNumber">${keytagContainer.querySelector("#stockNumber").textContent}</div>
-            <div id="modelYear">${keytagContainer.querySelector("#modelYear").textContent}</div>
-            <div id="manufacturer">${keytagContainer.querySelector("#manufacturer").textContent}</div>
-            <div id="modelName">${keytagContainer.querySelector("#modelName").textContent}</div>
-            <div id="modelCode">${keytagContainer.querySelector("#modelCode").textContent}</div>
-            <div id="modelColor">${keytagContainer.querySelector("#modelColor").textContent}</div>
-            <div id="modelVin">${keytagContainer.querySelector("#modelVin").textContent}</div>
-          </div>
-          <div id="keytagContainerTwo">
-            <span class="rotated-label-text">
-              ${keytagContainer.querySelector("#modelYear").textContent}
-              ${keytagContainer.querySelector("#manufacturer").textContent}<br>
-              <span class="label-text-lower-vin">
-              ${keytagContainer.querySelector("#modelVin").textContent}
-              </span><br>
-              <span class="label-text-lower-model">
-              ${keytagContainer.querySelector("#modelName").textContent}
-              </span>
-            </span>
-          </div>
-        `
-					:	`
-          <div id="keytagContainer">
-            <div id="modelUsage">${keytagContainer.querySelector("#modelUsage").textContent}</div>
-            <div id="stockNumber">${keytagContainer.querySelector("#stockNumber").textContent}</div>
-            <div id="modelYear">${keytagContainer.querySelector("#modelYear").textContent}</div>
-            <div id="manufacturer">${keytagContainer.querySelector("#manufacturer").textContent}</div>
-            <div id="modelName">${keytagContainer.querySelector("#modelName").textContent}</div>
-            <div id="modelCode">${keytagContainer.querySelector("#modelCode").textContent}</div>
-            <div id="modelColor">${keytagContainer.querySelector("#modelColor").textContent}</div>
-            <div id="modelVin">${keytagContainer.querySelector("#modelVin").textContent}</div>
-          </div>
-        `
-				}
-      </body>
-    </html>
-  `;
-
-	printDocument.open();
-	printDocument.write(printContent);
-	printDocument.close();
-
-	const printPromise = new Promise((resolve) => {
-		printFrame.onload = resolve;
-	});
-
-	printPromise.then(() => {
-		console.log("iframe loaded, attempting to print");
-		setTimeout(() => {
-			printFrame.contentWindow.focus();
-			printFrame.contentWindow.print();
-		}, 1000);
-	});
+	console.log("Key tag rendered from cached XML:", data);
 }
 
-// Wait for the DOM to be fully loaded before adding event listeners
-document.addEventListener("DOMContentLoaded", () => {
-	const printKeyTagButton = document.getElementById("printKeyTag");
-	if (printKeyTagButton) {
-		// Remove any existing event listeners
-		printKeyTagButton.removeEventListener("click", printKeyTag);
-		printKeyTagButton.removeEventListener("click", window.print);
+/**
+ * Toggle vertical key tag visibility.
+ */
+function toggleVerticalKeyTag() {
+	const verticalContainer = document.getElementById("keytagVertical");
+	const toggle = document.getElementById("verticalKeyTagSwitch");
 
-		// Add the new event listener
-		printKeyTagButton.addEventListener("click", printKeyTag);
+	if (!verticalContainer || !toggle) return;
+
+	// Save state to localStorage
+	localStorage.setItem("verticalKeyTagState", toggle.checked);
+
+	if (toggle.checked) {
+		verticalContainer.classList.remove("d-none");
 	} else {
-		console.error("Print Key Tag button not found");
+		verticalContainer.classList.add("d-none");
 	}
+}
 
-	const keyTagsModal = document.getElementById("keyTagsByStockNumberModal");
-	if (keyTagsModal) {
-		keyTagsModal.addEventListener("hide.bs.modal", restoreKeyTagsModalFocus);
+/**
+ * Print key tags using the component.
+ */
+function printKeyTags() {
+	const includeVertical = document.getElementById("verticalKeyTagSwitch")?.checked || false;
+	if (window.KeyTagComponent) {
+		KeyTagComponent.print("#keytagHorizontal", "#keytagVertical", includeVertical);
 	}
-});
+}
 
 let keyTagsModalLastFocus = null;
 
@@ -2081,66 +1734,6 @@ function initializeTextTooltips() {
 	});
 }
 
-// Add after DOM object
-const State = {
-	// Original data before filtering
-	allItems: [],
-	// Data after filtering
-	filteredItems: [],
-	// Current page of data
-	currentItems: [],
-	// Pagination state
-	pagination: {
-		currentPage: 1,
-		pageSize: 25,
-		totalPages: 1,
-	},
-	// Save current state to localStorage or memory fallback
-	saveState() {
-		const stateToSave = {
-			currentPage: this.pagination.currentPage,
-			pageSize: this.pagination.pageSize,
-		};
-
-		try {
-			if (checkLocalStorageAvailability().available) {
-				localStorage.setItem("tablePagination", JSON.stringify(stateToSave));
-				console.log("Saved state to localStorage");
-			} else {
-				memoryStorage.tablePagination = stateToSave;
-				console.log("Saved state to memory fallback");
-			}
-		} catch (e) {
-			console.warn("Failed to save state", e);
-			memoryStorage.tablePagination = stateToSave;
-		}
-	},
-	// Load state from localStorage or memory fallback
-	loadState() {
-		try {
-			let parsedState;
-
-			if (checkLocalStorageAvailability().available) {
-				const savedState = localStorage.getItem("tablePagination");
-				if (savedState) {
-					parsedState = JSON.parse(savedState);
-					console.log("Loaded state from localStorage");
-				}
-			} else if (memoryStorage.tablePagination) {
-				parsedState = memoryStorage.tablePagination;
-				console.log("Loaded state from memory fallback");
-			}
-
-			if (parsedState) {
-				this.pagination.currentPage = parsedState.currentPage || 1;
-				this.pagination.pageSize = parsedState.pageSize || 25;
-			}
-		} catch (e) {
-			console.error("Error loading saved state:", e);
-		}
-	},
-};
-
 // Pagination functions
 function initializePagination() {
 	// Set the page size select to the saved value
@@ -2342,7 +1935,7 @@ function updateTable() {
 
         <!-- Dropdown for creating keytags, hang tags, quotes, tv displays -->
           <div class="dropdown d-inline-block">
-            <button class="btn btn-dark btn-sm rounded-pill px-3 d-flex align-items-center dropdown-toggle mx-1 no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="btn btn-dark btn-sm rounded-pill px-3 d-flex align-items-center dropdown-toggle mx-1 no-caret" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
 				<div class="tag-key-group position-relative d-inline-block mx-1">
 					<i class="bi bi-tag" style="font-size: 1.35rem;"></i>
 					<i class="bi bi-key-fill position-absolute top-0" style="font-size: 0.8rem; color: white; transform: rotate(45deg); display: inline-block; margin-left: -8px; margin-top: 5px;"></i>

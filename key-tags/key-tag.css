@@ -1,0 +1,214 @@
+/**
+ * Key Tag Component Styles
+ * Styles for rendering and printing vehicle key tags.
+ */
+
+/* ===========================================
+   HORIZONTAL KEY TAG
+   =========================================== */
+
+.key-tag-horizontal {
+  width: 1.5in;
+  height: 2in;
+  border: 1px dashed #ddd;
+  border-radius: 6px;
+  background: #fff;
+  color: black;
+  overflow: hidden;
+  text-transform: uppercase;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.kt-row {
+  text-align: center;
+  font-weight: 700;
+  border-bottom: 1px solid #eee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+.kt-row:last-child {
+  border-bottom: none;
+}
+
+/* Row-specific sizes */
+.kt-usage {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.kt-stock {
+  font-size: 18px;
+  line-height: 21px;
+}
+
+.kt-year {
+  font-size: 18px;
+  line-height: 22px;
+}
+
+.kt-manufacturer {
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.kt-model {
+  font-size: 10px;
+  line-height: 20px;
+}
+
+.kt-code {
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.kt-color {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.kt-vin {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* Row labels (using ::after pseudo-element) */
+.kt-usage::after { content: "USAGE"; }
+.kt-stock::after { content: "STOCK#"; }
+.kt-year::after { content: "YEAR"; }
+.kt-manufacturer::after { content: "MANUF."; }
+.kt-model::after { content: "MODEL"; }
+.kt-code::after { content: "CODE"; }
+.kt-color::after { content: "COLOR"; }
+.kt-vin::after { content: "VIN"; }
+
+.kt-row::after {
+  display: block;
+  text-align: left;
+  padding-left: 2px;
+  margin-top: -4px;
+  font-size: 6pt;
+  line-height: 8px;
+  font-weight: 400;
+  color: #333;
+}
+
+/* ===========================================
+   VERTICAL KEY TAG
+   =========================================== */
+
+.key-tag-vertical {
+  writing-mode: vertical-rl;
+  width: 1.5in;
+  height: 2in;
+  border: 1px dashed #ddd;
+  border-radius: 6px;
+  background: #fff;
+  color: black;
+  overflow: hidden;
+  text-transform: uppercase;
+  font-family: system-ui, -apple-system, sans-serif;
+  padding: 4px 0;
+  box-sizing: border-box;
+}
+
+.kt-v-line {
+  display: block;
+  text-align: center;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kt-v-line-1 {
+  font-size: 16pt;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+
+.kt-v-line-2 {
+  font-size: 11pt;
+  line-height: 1.1;
+}
+
+/* ===========================================
+   PLACEHOLDERS
+   =========================================== */
+
+.kt-placeholder {
+  display: inline-block;
+  background: #e0e0e0;
+  border-radius: 4px;
+  height: 10px;
+  animation: kt-pulse 1.5s ease-in-out infinite;
+}
+
+.kt-placeholder.w-50 { width: 50%; }
+.kt-placeholder.w-75 { width: 75%; }
+.kt-placeholder.w-100 { width: 90%; }
+
+@keyframes kt-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ===========================================
+   CONTAINER VARIANTS (for display scaling)
+   =========================================== */
+
+/* Scaled up for screen preview (2x) */
+.kt-container-preview .key-tag-horizontal,
+.kt-container-preview .key-tag-vertical {
+  zoom: 2;
+}
+
+/* Side by side layout */
+.kt-container-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Stack vertically on md and smaller screens */
+@media (max-width: 767.98px) {
+  .kt-container-row {
+    flex-direction: column;
+  }
+}
+
+/* ===========================================
+   PRINT STYLES
+   =========================================== */
+
+@media print {
+  .key-tag-horizontal,
+  .key-tag-vertical {
+    zoom: 1 !important;
+    border: 1px dashed #ddd !important;
+    background: #fff !important;
+    page-break-inside: avoid;
+  }
+
+  .kt-placeholder {
+    display: none !important;
+  }
+
+  .kt-print-page {
+    page-break-after: always;
+  }
+
+  .kt-print-page:last-child {
+    page-break-after: avoid;
+  }
+}
+
+@page {
+  size: 1.625in 2.125in;
+  margin: 0.06in;
+}

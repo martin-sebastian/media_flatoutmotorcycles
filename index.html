@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="./css/bootstrap.css" />
     <link rel="stylesheet" href="./css/bootstrap-icons.css" />
     <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./key-tags/key-tag.css" />
   </head>
 
 
@@ -415,53 +416,28 @@
       </div>
 
       <div class="modal fade" id="keytagModal" tabindex="-1" aria-labelledby="keytagModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
           <div class="modal-content">
             <div class="modal-header d-flex flex-row justify-content-between align-items-center d-print-none">
-              <h5 class="modal-title text-capitalize" id="keyTagsByStockNumberModalLabel"><i class="bi bi-tag me-2 icon-circle text-white"></i></h5>
-              <h1 class="modal-title ms-2 fs-5" id="keytagModalLabel">StockNumber</h1>
-              <div class="form-check form-switch w-50 d-flex justify-content-end">
-                <input class="form-check-input mx-3" type="checkbox" role="switch" id="verticalKeyTagSwitch" onchange="toggleVerticalKeyTag(event)">
-                <label class="form-check-label" for="verticalKeyTagSwitch">Deal Jacket Label</label>
+              <h5 class="modal-title text-capitalize"><i class="bi bi-tag me-2 icon-circle text-white"></i></h5>
+              <h1 class="modal-title ms-2 fs-5" id="keytagModalLabel">Stock Number</h1>
+              <div class="form-check form-switch d-flex justify-content-end">
+                <input class="form-check-input mx-3" type="checkbox" role="switch" id="verticalKeyTagSwitch">
+                <label class="form-check-label" for="verticalKeyTagSwitch">Include Vertical Tag</label>
               </div>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body bg-light dots">
-              <div class="main-content">
-                <!-- Elements to display the fetched data -->
-                <div id="keytagContainer" class="key-tag-container zoom-1 zoomElement text-truncate mx-1">
-                  <div id="modelUsage" class="model-usage text-truncate">New or Used</div>
-                  <div id="stockNumber" class="stock-number">Stock Number</div>
-                  <div id="modelYear" class="model-year text-truncate">Year</div>
-                  <div id="manufacturer" class="manufacturer text-truncate">Manufacturer</div>
-                  <div id="modelName" class="model-name text-truncate">Model Name</div>
-                  <div id="modelCode" class="model-code text-truncate">Model Code</div>
-                  <div id="modelColor" class="model-color text-truncate">Model Color</div>
-                  <div id="modelVin" class="model-vin text-truncate">VIN NUMBER</div>
-                </div>
-                <!-- New rotated label -->
-                <div id="keytagVerticalContainer" class="key-tag-container zoomElementVertical mx-1 visually-hidden">
-                  <div class="rotated-label-text text-truncate d-flex flex-column gap-1">
-                    <div class="year-make-container" style="height: 2in; margin: 0">
-                      <span id="modelYearVertical" class="model-year-vertical">Year</span>
-                      <span id="manufacturerVertical" class="manufacturer-vertical">Make</span>
-                    </div>
-                    <div class="name-vin-container" style="height: 2in; margin: 0">
-                      <div id="modelVinVertical" class="model-vin-vertical">VIN</div>
-                      <div id="modelNameVertical" class="model-name-vertical">Model Name</div>
-                    </div>
-                  </div>
-                </div>
-                <div id="message"></div>
+              <!-- Key Tag Component Containers -->
+              <div class="kt-container-row kt-container-preview py-4">
+                <div id="keytagHorizontal"></div>
+                <div id="keytagVertical" class="d-none"></div>
               </div>
+              <div id="keytagMessage" class="text-center text-muted small"></div>
             </div>
             <div class="modal-footer d-print-none">
-              <div class="btn-group me-4" role="group" aria-label="Zoom buttons">
-                <button type="button" id="zoomOutBtn" class="btn-icon fs-2 m-1"><i class="bi bi-dash-square"></i></button>
-                <button type="button" id="zoomInBtn" class="btn-icon fs-2 m-1"><i class="bi bi-plus-square"></i></button>
-              </div>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="button" id="printKeyTag" class="btn btn-danger pe-3"><i class="bi bi-printer me-2"></i> Print Key Tag</button>
+              <button type="button" id="printKeyTagBtn" class="btn btn-danger"><i class="bi bi-printer me-2"></i>Print Key Tag</button>
             </div>
           </div>
         </div>
@@ -606,6 +582,7 @@
     <script src="./js/popper.js"></script>
     <script src="./js/numeral.min.js"></script>
     <script src="./js/moment.js"></script>
+    <script src="./key-tags/key-tag.js"></script>
     <script src="./js/app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
     <script>
