@@ -36,16 +36,27 @@ function formatDate(dateStr) {
 
 /**
  * Clean description text - strip disclaimer and highlights, keep only specs.
+ * Looks for first spec starting with "Engine" (Engine Type, Engine HP, etc.)
  * @param {string} description - Raw description text.
- * @returns {string} Cleaned description starting from Engine Type.
+ * @returns {string} Cleaned description starting from first Engine spec.
  */
 function cleanDescription(description) {
   if (!description) return "";
-  const engineTypeMatch = description.match(/Engine Type[:\s]/i);
-  if (engineTypeMatch) {
-    const startIndex = description.indexOf(engineTypeMatch[0]);
+  
+  // Look for "Engine" followed by a word and colon (Engine Type:, Engine HP:, Engine:, etc.)
+  const engineMatch = description.match(/Engine\s*\w*\s*:/i);
+  if (engineMatch) {
+    const startIndex = description.indexOf(engineMatch[0]);
     return description.substring(startIndex).trim();
   }
+  
+  // Fallback: look for common spec patterns (Word: Value)
+  const specMatch = description.match(/\b(Displacement|Cylinders|Horsepower|HP|Deck|Weight|Capacity|Fuel)\s*:/i);
+  if (specMatch) {
+    const startIndex = description.indexOf(specMatch[0]);
+    return description.substring(startIndex).trim();
+  }
+  
   return description;
 }
 
