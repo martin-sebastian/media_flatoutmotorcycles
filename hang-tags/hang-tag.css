@@ -1,0 +1,587 @@
+/**
+ * Hang Tag Component Styles
+ * Styles for rendering and printing vehicle hang tags.
+ */
+
+/* ===========================================
+   BASE STYLES
+   =========================================== */
+
+/* Dots background for screen only */
+.hang-tags-body {
+  background-image: radial-gradient(#999999 1px, transparent 1px);
+  background-size: 20px 20px;
+  min-height: 100vh;
+}
+
+.tags-container {
+  width: 8.5in;
+  height: 11in;
+  display: flex;
+  flex-direction: row;
+  background: #fff;
+  border: 10px solid #fff;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.tag-left,
+.tag-right {
+  width: 4.25in;
+  height: 11in;
+  margin: 0;
+  padding: 0;
+  border: 1px dashed #ddd;
+  box-sizing: border-box;
+}
+
+/* ===========================================
+   HANG TAG CARD
+   =========================================== */
+
+.ht-print-tag {
+  width: 4in;
+  height: 10.75in;
+  margin: 0.1in auto;
+  padding: 0;
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Punch hole at top */
+.ht-hole {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #666;
+  border-radius: 50%;
+  margin: 10px auto;
+}
+
+/* ===========================================
+   LOGO
+   =========================================== */
+
+.ht-logo-container {
+  text-align: center;
+  padding: 0 10px;
+}
+
+.ht-logo {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===========================================
+   HEADER
+   =========================================== */
+
+.ht-header {
+  text-align: center;
+  padding: 10px;
+}
+
+.ht-badges {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.ht-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.ht-badge-usage {
+  background: #f0ad4e;
+  color: #fff;
+}
+
+.ht-badge-year {
+  background: #337ab7;
+  color: #fff;
+}
+
+.ht-badge-metric {
+  background: #777;
+  color: #fff;
+}
+
+.ht-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #222;
+  margin: 8px 0;
+  line-height: 1.2;
+}
+
+.ht-stock-badge {
+  display: inline-block;
+  padding: 8px 15px;
+  background: #fff;
+  border: 1px solid #666;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ===========================================
+   BODY
+   =========================================== */
+
+.ht-body {
+  flex: 1;
+  padding: 0 10px;
+  padding-bottom: 60px; /* Space for fixed barcode */
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===========================================
+   PRICE CARD
+   =========================================== */
+
+.ht-price-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.ht-price-card-header {
+  text-align: center;
+  padding: 10px;
+  background: #fff;
+}
+
+.ht-price-card-body {
+  background: #f9f9f9;
+  padding: 0;
+}
+
+.ht-price-card-body .ht-list {
+  margin: 0;
+}
+
+/* Legacy price section (keep for compatibility) */
+.ht-price-section {
+  text-align: center;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.ht-msrp {
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.ht-our-price {
+  font-size: 42px;
+  font-weight: 900;
+  color: #dd1f26;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.ht-yellow-tag {
+  height: 30px;
+  vertical-align: middle;
+}
+
+.ht-savings {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 8px 0;
+}
+
+.ht-savings-label {
+  background: #777;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.ht-savings-arrow {
+  color: #666;
+  margin: 0 4px;
+}
+
+.ht-savings-value {
+  background: #5cb85c;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.ht-expires {
+  font-size: 13px;
+  color: #666;
+  margin-top: 5px;
+}
+
+/* ===========================================
+   LIST ITEMS
+   =========================================== */
+
+.ht-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ht-list-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.ht-list-item:last-child {
+  border-bottom: none;
+}
+
+.ht-list-header {
+  font-weight: 700;
+  background: #f9f9f9;
+}
+
+.ht-amount {
+  font-weight: 700;
+}
+
+/* ===========================================
+   IMAGE
+   =========================================== */
+
+.ht-image-container {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.ht-image {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ===========================================
+   QR & BARCODE
+   =========================================== */
+
+.ht-qr-container {
+  text-align: center;
+  padding: 10px 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ht-qr-container img {
+  margin: 0 auto;
+  width: 100px;
+  height: 100px;
+}
+
+.ht-barcode-container {
+  text-align: center;
+  padding: 15px 0 5px 0;
+  background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%, rgba(255,255,255,1) 100%);
+  position: absolute;
+  bottom: 26px;
+  left: 0;
+  right: 0;
+  height: 70px;
+}
+
+.ht-barcode {
+  max-width: 100%;
+}
+
+/* ===========================================
+   DESCRIPTION & FEATURES
+   =========================================== */
+
+.ht-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 10px 0 5px;
+}
+
+.ht-description,
+.ht-features,
+.ht-accessories {
+  margin-bottom: 10px;
+}
+
+.ht-description-content,
+.ht-features-content {
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 8px;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+/* ===========================================
+   FOOTER
+   =========================================== */
+
+.ht-footer {
+  background: #ee0000;
+  padding: 10px;
+  text-align: center;
+  border-radius: 4px;
+  margin: 10px;
+}
+
+.ht-footer-price {
+  font-size: 36px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+
+.ht-footer-expires {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 4px;
+}
+
+/* ===========================================
+   LOADING / PLACEHOLDER STATES
+   =========================================== */
+
+.ht-loading .ht-loading-message {
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  padding: 20px;
+}
+
+/* Error state */
+.ht-error .ht-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.ht-error .text-danger {
+  color: #dc3545;
+}
+
+.ht-error .text-warning {
+  color: #ffc107;
+}
+
+.ht-placeholder-bar {
+  display: block;
+  background: #e0e0e0;
+  border-radius: 4px;
+  height: 16px;
+  margin: 8px auto;
+  animation: ht-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes ht-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ===========================================
+   LOCATION BADGES
+   =========================================== */
+
+.ht-location {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 5px;
+}
+
+.ht-location-stock {
+  color: #dd1f26;
+}
+
+.ht-location-order {
+  color: #f0ad4e;
+}
+
+/* ===========================================
+   VISIBILITY TOGGLES
+   =========================================== */
+
+.ht-hidden {
+  display: none !important;
+}
+
+/* ===========================================
+   RESPONSIVE / PREVIEW ZOOM
+   =========================================== */
+
+.hang-tags-preview {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+/* ===========================================
+   PRINT STYLES
+   =========================================== */
+
+@media print {
+  @page {
+    size: 8.5in 11in portrait;
+    margin: 0;
+  }
+
+  /* Reset everything outside tags */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    background-image: none !important;
+  }
+
+  /* Hide non-print elements */
+  .d-print-none,
+  .dots,
+  .hang-tags-body::before,
+  .hang-tags-body::after {
+    background: none !important;
+    background-image: none !important;
+  }
+
+  /* Hide everything except tags-container */
+  body > *:not(main) {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .main-content {
+    box-shadow: none !important;
+  }
+
+  .hang-tags-preview {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Reset zoom and transform for print */
+  .tags-container,
+  #hangTagsContainer {
+    zoom: 1 !important;
+    transform: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 8.5in !important;
+    height: 11in !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .tag-left,
+  .tag-right {
+    width: 4.25in !important;
+    height: 11in !important;
+    flex: 0 0 4.25in !important;
+    border: 1px dashed #ccc !important;
+    overflow: hidden !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .ht-print-tag {
+    width: 4in !important;
+    height: 10.75in !important;
+    margin: 0.125in auto !important;
+    overflow: hidden !important;
+  }
+
+  .ht-footer {
+    background: #ee0000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .ht-badge-usage {
+    background: #f0ad4e !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .ht-badge-year {
+    background: #337ab7 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .ht-badge-metric {
+    background: #777 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .ht-savings-label,
+  .ht-savings-value {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .ht-placeholder-bar {
+    display: none !important;
+  }
+
+  .hidden-print {
+    display: none !important;
+  }
+}
+
+/* ===========================================
+   MOBILE RESPONSIVE
+   =========================================== */
+
+@media (max-width: 768px) {
+  .tags-container {
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+  }
+
+  .tag-left,
+  .tag-right {
+    width: 100%;
+    height: auto;
+    min-height: 11in;
+  }
+
+  .hang-tags-preview {
+    padding: 10px;
+  }
+}

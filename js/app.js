@@ -19,6 +19,7 @@ const DOM = {
 			type: getActiveFilterElement("type"),
 			usage: getActiveFilterElement("usage"),
 			updated: getActiveFilterElement("updated"),
+			updatedEnd: getActiveFilterElement("updatedEnd"),
 			photos: getActiveFilterElement("photos"),
 		};
 	},
@@ -1217,6 +1218,7 @@ function filterTable() {
 	const photosFilter =
 		getActiveFilterElement("photos")?.value.toUpperCase() || "";
 	const updatedFilter = getActiveFilterElement("updated")?.value || "";
+	const updatedEndFilter = getActiveFilterElement("updatedEnd")?.value || "";
 
 	// Split search input into individual terms
 	const searchTerms = searchInput
@@ -1232,6 +1234,7 @@ function filterTable() {
 		year: yearFilter,
 		photos: photosFilter,
 		updated: updatedFilter,
+		updatedEnd: updatedEndFilter,
 	};
 
 	// Apply filters to allItems
@@ -1247,7 +1250,9 @@ function filterTable() {
 
 		// Check other filters
 		const filterMatch = Object.entries(filters).every(([key, value]) => {
-			if (!value) return true; // Skip empty filters
+			// Special handling for date range - don't skip if the other date field has a value
+			if (!value && key !== "updated") return true; // Skip empty filters
+			if (!value && key === "updated" && !filters.updatedEnd) return true;
 
 			let textToCompare = "";
 			switch (key) {
@@ -1273,12 +1278,28 @@ function filterTable() {
 					return true;
 				}
 				case "updated": {
-					// Strip time components from both dates for comparison
-					const itemDate = moment(item.updated)
-						.startOf("day")
-						.format("YYYY-MM-DD");
-					const filterDate = moment(value).startOf("day").format("YYYY-MM-DD");
-					return itemDate === filterDate;
+					// Handle date range filtering
+					const itemDate = moment(item.updated).startOf("day");
+					const startDate = value ? moment(value).startOf("day") : null;
+					const endDate = filters.updatedEnd ? moment(filters.updatedEnd).startOf("day") : null;
+					
+					// If both dates provided, check range (inclusive)
+					if (startDate && endDate) {
+						return itemDate.isBetween(startDate, endDate, "day", "[]");
+					}
+					// If only start date, filter items on or after
+					if (startDate) {
+						return itemDate.isSameOrAfter(startDate, "day");
+					}
+					// If only end date, filter items on or before
+					if (endDate) {
+						return itemDate.isSameOrBefore(endDate, "day");
+					}
+					return true;
+				}
+				case "updatedEnd": {
+					// Skip - handled in "updated" case
+					return true;
 				}
 				default:
 					textToCompare = "";

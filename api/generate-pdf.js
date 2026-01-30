@@ -1,12 +1,6 @@
-const chromium = require("@sparticuz/chromium");
-const puppeteer = require("puppeteer-core");
-
-// Optimize chromium for serverless
-chromium.setHeadlessMode = true;
-chromium.setGraphicsMode = false;
-
 /**
  * Vercel serverless function to generate PDF using headless Chrome.
+ * Uses @sparticuz/chromium on Vercel, regular puppeteer locally.
  */
 module.exports = async (req, res) => {
   const { s: stockNumber } = req.query;
@@ -15,22 +9,39 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: "Missing stock number parameter (s)" });
   }
 
-  // Always use the main domain to avoid hitting old deployment URLs
+  const isVercel = !!process.env.VERCEL;
   const baseUrl = "https://media-flatoutmoto.vercel.app";
-
   const printUrl = `${baseUrl}/print/?s=${encodeURIComponent(stockNumber)}`;
 
   let browser = null;
 
   try {
-    console.log("Starting browser...");
-    
-    browser = await puppeteer.launch({
-      args: [...chromium.args, "--no-sandbox", "--disable-gpu"],
-      defaultViewport: { width: 816, height: 1056 }, // Letter size at 96dpi
-      executablePath: await chromium.executablePath(),
-      headless: true,
-    });
+    console.log("Starting browser... (isVercel:", isVercel, ")");
+
+    if (isVercel) {
+      // Production: use @sparticuz/chromium
+      const chromium = require("@sparticuz/chromium");
+      const puppeteer = require("puppeteer-core");
+      
+      chromium.setHeadlessMode = true;
+      chromium.setGraphicsMode = false;
+
+      browser = await puppeteer.launch({
+        args: [...chromium.args, "--no-sandbox", "--disable-gpu"],
+        defaultViewport: { width: 816, height: 1056 },
+        executablePath: await chromium.executablePath(),
+        headless: true,
+      });
+    } else {
+      // Local: use regular puppeteer with bundled Chromium
+      const puppeteer = require("puppeteer");
+      
+      browser = await puppeteer.launch({
+        headless: "new",
+        args: ["--no-sandbox", "--disable-gpu"],
+        defaultViewport: { width: 816, height: 1056 },
+      });
+    }
 
     console.log("Browser started, creating page...");
     const page = await browser.newPage();
@@ -41,16 +52,13 @@ module.exports = async (req, res) => {
       timeout: 30000,
     });
 
-    // Wait a bit for JS to execute
+    // Wait for JS to execute
     await new Promise((r) => setTimeout(r, 5000));
-    
-    // Debug: get page content
+
+    // Debug: check page content
     const content = await page.content();
     console.log("Page content length:", content.length);
-    console.log("Has print-header:", content.includes("print-header"));
-    console.log("Has Loading:", content.includes("Loading print layout"));
-    
-    // If still showing loading message, wait more
+
     if (content.includes("Loading print layout")) {
       console.log("Still loading, waiting more...");
       await new Promise((r) => setTimeout(r, 5000));
@@ -70,7 +78,6 @@ module.exports = async (req, res) => {
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.setHeader("Content-Length", pdfBuffer.length);
 
-    // Send as binary
     res.end(pdfBuffer);
     return;
   } catch (error) {

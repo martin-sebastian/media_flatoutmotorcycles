@@ -2,6 +2,7 @@ const PORTAL_API_BASE = "https://newportal.flatoutmotorcycles.com/portal/public/
 
 const ROOT = document.getElementById("printRoot");
 let currentStockNumber = "";
+let currentVehicleTitle = "";
 
 /**
  * Read query parameters for the print page.
@@ -285,13 +286,56 @@ function renderPrint(data, apiData, overrideImage, xmlDescription = "") {
 }
 
 /**
- * Download the print layout as a PDF file via server-side Adobe API.
+ * Show/hide loading overlay during PDF generation.
+ * @param {boolean} show Whether to show the overlay.
+ */
+function toggleLoadingOverlay(show) {
+  let overlay = document.getElementById("pdfLoadingOverlay");
+  
+  if (show) {
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "pdfLoadingOverlay";
+      overlay.innerHTML = `
+        <div class="pdf-overlay-content">
+          <div class="spinner-border text-light mb-3" role="status"></div>
+          <h5>Generating PDF...</h5>
+          <p class="text-muted mb-0">Please wait, do not navigate away from this page.</p>
+        </div>
+      `;
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.85); z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        text-align: center; color: white;
+      `;
+      document.body.appendChild(overlay);
+    }
+    overlay.style.display = "flex";
+  } else if (overlay) {
+    overlay.style.display = "none";
+  }
+}
+
+/**
+ * Build filename from stock number and vehicle title.
+ * @returns {string} Sanitized filename.
+ */
+function buildPdfFilename() {
+  const title = currentVehicleTitle || "";
+  const sanitized = title.replace(/[^a-zA-Z0-9\s-]/g, "").replace(/\s+/g, "-").toUpperCase();
+  return sanitized ? `${currentStockNumber}-${sanitized}.pdf` : `${currentStockNumber}.pdf`;
+}
+
+/**
+ * Download the print layout as a PDF file via server-side Puppeteer.
  */
 async function downloadPdf() {
   const btn = document.getElementById("downloadPdfBtn");
   const originalText = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Generating...';
+  toggleLoadingOverlay(true);
 
   try {
     const response = await fetch(`/api/generate-pdf?s=${encodeURIComponent(currentStockNumber)}`);
@@ -306,7 +350,7 @@ async function downloadPdf() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${currentStockNumber}.pdf`;
+    a.download = buildPdfFilename();
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -315,6 +359,7 @@ async function downloadPdf() {
     console.error("PDF generation error:", err);
     alert("PDF generation failed: " + err.message);
   } finally {
+    toggleLoadingOverlay(false);
     btn.disabled = false;
     btn.innerHTML = originalText;
   }
@@ -346,6 +391,7 @@ async function initPrint() {
 
     const data = buildDisplayData(apiData);
     currentStockNumber = data.stockNumber;
+    currentVehicleTitle = data.title;
     
     // Use XML description for dealer notes if available
     const xmlDescription = xmlData?.Description || "";

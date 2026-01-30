@@ -138,8 +138,10 @@
                 <label class="form-check-label" for="toggleColorColumnMobile">Color</label>
               </div>
             </div>
-            <label for="updatedFilterMobile" class="visually-hidden">Updated:</label>
-            <input type="date" id="updatedFilterMobile" value="" class="form-control d-inline-flex w-25 me-1" name="updated-date" data-filter="updated" onchange="filterTable()">
+            <label for="updatedFilterMobile" class="visually-hidden">Updated From:</label>
+            <input type="date" id="updatedFilterMobile" value="" class="form-control w-100 my-1" name="updated-date" data-filter="updated" title="Updated From">
+            <label for="updatedEndFilterMobile" class="visually-hidden">Updated To:</label>
+            <input type="date" id="updatedEndFilterMobile" value="" class="form-control w-100 my-1" name="updated-end-date" data-filter="updatedEnd" title="Updated To">
           </form>
      
            
@@ -236,8 +238,13 @@
                     <option value="INHOUSE">In-House</option>
                     <option value="STOCK">Stock</option>
                   </select>
-                  <label for="updatedFilter" class="visually-hidden">Updated:</label>
-                  <input type="date" id="updatedFilter" value="" class="form-control form-control-sm" name="updated-date" data-filter="updated" title="by Date Modified" onchange="filterTable()" style="max-width: 120px">
+                  <div class="d-flex flex-row align-items-center justify-content-center ms-4" style="max-width: 260px">
+                    <label for="updatedFilter" class="visually-hidden">From:</label>
+                    <input type="date" id="updatedFilter" value="" class="form-control form-control-sm" name="updated-date" data-filter="updated" title="Updated From" style="max-width: 130px">
+                    <i class="bi bi-arrows mx-1"></i>
+                    <label for="updatedEndFilter" class="visually-hidden">To:</label>
+                    <input type="date" id="updatedEndFilter" value="" class="form-control form-control-sm" name="updated-end-date" data-filter="updatedEnd" title="Updated To" style="max-width: 130px">
+                  </div>
                 </div>
 
                 <div class="left-group d-flex align-items-center gap-2">

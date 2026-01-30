@@ -10,19 +10,28 @@
 		<link rel="stylesheet" href="./print.css" />
 	</head>
 	<body class="print-body">
-		<div class="print-toolbar screen-only">
+		<div class="print-toolbar screen-only d-flex justify-content-between">
 			<button
 				class="btn btn-dark"
 				type="button"
-				onclick="window.history.back()">
+				onclick="window.location.href = '../'">
 				<i class="bi bi-arrow-left me-2"></i>Back
 			</button>
-			<button class="btn btn-danger" type="button" id="downloadPdfBtn" disabled>
-				<i class="bi bi-download me-2"></i>Download PDF
-			</button>
-			<button class="btn btn-outline-secondary" type="button" onclick="window.print()">
-				<i class="bi bi-printer me-2"></i>Print
-			</button>
+			<div class="d-flex justify-content-end">
+				<button
+					class="btn btn-outline-secondary me-2"
+					type="button"
+					onclick="window.print()">
+					<i class="bi bi-printer me-2"></i>Print
+				</button>
+				<button
+					class="btn btn-danger"
+					type="button"
+					id="downloadPdfBtn"
+					disabled>
+					<i class="bi bi-download me-2"></i>Download PDF
+				</button>
+			</div>
 		</div>
 
 		<main class="print-page" id="printRoot">
