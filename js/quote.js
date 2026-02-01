@@ -1,3 +1,5 @@
+/* global bootstrap, numeral, moment, ClipboardJS, PriceCalculator */
+
 /**
  * CONFIGURATION CONSTANTS
  * Main application configuration settings
@@ -6,22 +8,15 @@ const CONFIG = {
   API_URL: "https://newportal.flatoutmotorcycles.com/portal/public/api", // Base API endpoint for vehicle data
   MAIN_LOTS: ["SUZ", "KAW", "POL", "PREOWNED", "PRE OWNED"], // Vehicle lot categories for inventory status
   DEFAULT_INTEREST_RATE: 6.99, // Default APR for payment calculations
+  CUSTOM_ACCESSORY_ROWS: 4, // Number of blank accessory input rows
 };
 
 /**
- * ALPINE.JS CONFIGURATION
- * Configuration object for Alpine.js reactive data (currently unused but prepared for future use)
+ * CUSTOM ACCESSORIES STORAGE
+ * Stores user-added accessories that aren't in the API data
  */
-const ALPINE_CONFIG = {
-  customerData: {
-    firstName: "", // Customer first name for quote personalization
-    lastName: "",  // Customer last name for quote personalization
-  },
-  init() {
-    // Initialize with any existing data or defaults
-    return this.customerData;
-  },
-};
+let customAccessories = [];
+const CUSTOM_ACCESSORIES_KEY = "quoteCustomAccessories";
 
 /**
  * INITIALIZE CLIPBOARD TOOLTIPS
@@ -1121,6 +1116,9 @@ document.addEventListener("DOMContentLoaded", function () {
       initializeVisibilityToggles();
       initializeCustomerInfo();
       initializeSidebarState();
+      restoreCustomAccessories();
+      initializeCustomAccessoriesForm();
+      renderCustomAccessoriesOnQuote();
       createExportButton();
       createFloatingZoomControls();
 
@@ -1206,14 +1204,15 @@ window.addEventListener("error", function (event) {
 });
 
 /**
- * Get current quote state (customer info, toggle states, and first image URL).
- * @returns {object} State object with name, info, hidden sections, and image.
+ * Get current quote state (customer info, toggle states, accessories, and first image URL).
+ * @returns {object} State object with name, info, hidden sections, accessories, and image.
  */
 function getQuoteState() {
   const state = {
     name: document.getElementById("inputFullName")?.value || "",
     info: document.getElementById("inputLastName")?.value || "",
     hide: [],
+    acc: getCustomAccessoriesParam(), // Custom accessories
     img: "", // First image URL (may be from XML merge)
   };
 
@@ -1231,6 +1230,7 @@ function getQuoteState() {
     "quotePayment",
     "quotePaymentAmount",
     "quoteAccessories",
+    "quoteTradeIn",
     "quoteRebates",
     "quoteDiscounts",
     "quoteFees",
@@ -1265,6 +1265,7 @@ function buildSaveUrl(format = "jpeg") {
   if (state.name) params.set("name", state.name);
   if (state.info) params.set("info", state.info);
   if (state.hide.length > 0) params.set("hide", state.hide.join(","));
+  if (state.acc) params.set("acc", state.acc);
   if (state.img) params.set("img", state.img);
   
   return `/api/generate-image?${params.toString()}`;
@@ -1322,6 +1323,8 @@ async function saveQuoteImage(format = "jpeg") {
     }
   }
 }
+// Export for inline onclick handlers
+window.saveQuoteImage = saveQuoteImage;
 
 /**
  * CREATE EXPORT BUTTON
@@ -1430,6 +1433,7 @@ function initializeVisibilityToggles() {
     quotePayment: ".payment-calculator-container",
     quotePaymentAmount: ".payment",
     quoteAccessories: ".accessory-items-container",
+    quoteTradeIn: ".trade-in-container",
     quoteRebates: ".mat-items-container",
     quoteDiscounts: ".discount-items-container",
     quoteFees: ".otd-items-container",
@@ -1518,10 +1522,11 @@ function applyStateFromUrlParams() {
   const hideParam = params.get("hide");
   const nameParam = params.get("name");
   const infoParam = params.get("info");
+  const accParam = params.get("acc");
   const imgParam = params.get("img");
   
   // If no state params, return false to use localStorage instead
-  if (!hideParam && !nameParam && !infoParam && !imgParam) {
+  if (!hideParam && !nameParam && !infoParam && !accParam && !imgParam) {
     return false;
   }
   
@@ -1587,7 +1592,19 @@ function applyStateFromUrlParams() {
     }
   }
   
-  console.log("Applied state from URL params:", { hide: hideParam, name: nameParam, info: infoParam, img: imgParam ? "yes" : "no" });
+  // Apply custom accessories from URL param
+  if (accParam) {
+    customAccessories = parseCustomAccessoriesParam(accParam);
+    // Re-render accessories and recalculate
+    setTimeout(() => {
+      initializeCustomAccessoriesForm();
+      renderCustomAccessoriesOnQuote();
+      recalculatePrices();
+    }, 100);
+    console.log("Applied accessories from params:", customAccessories);
+  }
+  
+  console.log("Applied state from URL params:", { hide: hideParam, name: nameParam, info: infoParam, acc: accParam ? "yes" : "no", img: imgParam ? "yes" : "no" });
   return true;
 }
 
@@ -1732,4 +1749,250 @@ function initializeSidebarState() {
   setTimeout(() => {
     restoreSidebarState();
   }, 100);
+}
+
+/**
+ * CUSTOM ACCESSORIES MANAGEMENT
+ * Functions to add, remove, and manage user-added accessories
+ */
+
+/**
+ * Initialize the custom accessories input form in the sidebar
+ * Creates multiple blank input rows for adding accessories
+ */
+function initializeCustomAccessoriesForm() {
+  const container = document.getElementById("customAccessoriesInputs");
+  if (!container) return;
+
+  let html = "";
+  for (let i = 0; i < CONFIG.CUSTOM_ACCESSORY_ROWS; i++) {
+    const acc = customAccessories[i] || { name: "", price: "" };
+    html += `
+      <div class="form-group d-flex flex-row align-items-center accessory-row" data-index="${i}">
+        <input
+          type="text"
+          class="form-control form-control-sm flex-grow-1 me-1 mb-2 mt-2"
+          id="accessoryName${i}"
+          placeholder="Accessory Name"
+          value="${acc.name || ""}"
+          oninput="updateCustomAccessory(${i})"
+        />
+        <input
+          type="number"
+          class="form-control form-control-sm text-end ms-1 mb-2 mt-2"
+          id="accessoryPrice${i}"
+          placeholder="$0.00"
+          value="${acc.price || ""}"
+          style="width: 100px;"
+          oninput="updateCustomAccessory(${i})"
+        />
+      </div>
+    `;
+  }
+  container.innerHTML = html;
+}
+
+/**
+ * Update a custom accessory from form input
+ * @param {number} index - Index of the accessory row
+ */
+window.updateCustomAccessory = function updateCustomAccessory(index) {
+  const nameInput = document.getElementById(`accessoryName${index}`);
+  const priceInput = document.getElementById(`accessoryPrice${index}`);
+
+  if (!nameInput || !priceInput) return;
+
+  const name = nameInput.value.trim();
+  const price = parseFloat(priceInput.value) || 0;
+
+  // Update or create the accessory entry
+  if (name || price > 0) {
+    customAccessories[index] = { name, price };
+  } else {
+    customAccessories[index] = null;
+  }
+
+  // Save and re-render
+  saveCustomAccessories();
+  renderCustomAccessoriesOnQuote();
+  recalculatePrices();
+}
+
+/**
+ * Clear all custom accessories
+ */
+function clearAllCustomAccessories() {
+  customAccessories = [];
+  saveCustomAccessories();
+  initializeCustomAccessoriesForm();
+  renderCustomAccessoriesOnQuote();
+  recalculatePrices();
+}
+// Export for inline onclick handler
+window.clearAllCustomAccessories = clearAllCustomAccessories;
+
+/**
+ * Save custom accessories to localStorage
+ */
+function saveCustomAccessories() {
+  const filtered = customAccessories.filter((a) => a && (a.name || a.price > 0));
+  localStorage.setItem(CUSTOM_ACCESSORIES_KEY, JSON.stringify(filtered));
+}
+
+/**
+ * Restore custom accessories from localStorage
+ */
+function restoreCustomAccessories() {
+  const saved = localStorage.getItem(CUSTOM_ACCESSORIES_KEY);
+  if (saved) {
+    try {
+      customAccessories = JSON.parse(saved) || [];
+    } catch (e) {
+      console.error("Error restoring custom accessories:", e);
+      customAccessories = [];
+    }
+  }
+}
+
+/**
+ * Render custom accessories on the quote card
+ * Adds them to the accessory-items-container
+ */
+function renderCustomAccessoriesOnQuote() {
+  const container = document.querySelector(".accessory-items-container");
+  if (!container) return;
+
+  // Get valid custom accessories
+  const validAccessories = customAccessories.filter((a) => a && a.name);
+
+  // Check if we have API accessories
+  const hasApiAccessories = window.vehicleData?.AccessoryItems?.length > 0;
+
+  // Build custom accessories HTML
+  let customHtml = "";
+  if (validAccessories.length > 0) {
+    customHtml = validAccessories
+      .map(
+        (acc) => `
+        <div class="accessory-item w-100 custom-accessory">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="accessory-name flex-grow-1">${acc.name}</span>
+            <span class="accessory-price fw-bold text-end ms-2">
+              ${PriceCalculator.format(acc.price)}
+            </span>
+          </div>
+        </div>
+      `
+      )
+      .join("");
+  }
+
+  // If no API accessories, we need to create the card structure
+  if (!hasApiAccessories && validAccessories.length > 0) {
+    container.innerHTML = `
+      <div class="card">
+        <h5 class="card-title fs-6 my-0">Accessories</h5>
+        ${customHtml}
+      </div>
+    `;
+  } else if (hasApiAccessories && validAccessories.length > 0) {
+    // Append to existing card
+    const card = container.querySelector(".card");
+    if (card) {
+      // Remove old custom accessories
+      card.querySelectorAll(".custom-accessory").forEach((el) => el.remove());
+      // Append new ones
+      card.insertAdjacentHTML("beforeend", customHtml);
+    }
+  } else if (!hasApiAccessories && validAccessories.length === 0) {
+    // Clear the container if no accessories at all
+    container.innerHTML = "";
+  } else {
+    // Has API accessories but no custom - just remove custom ones
+    const card = container.querySelector(".card");
+    if (card) {
+      card.querySelectorAll(".custom-accessory").forEach((el) => el.remove());
+    }
+  }
+}
+
+/**
+ * Recalculate all prices using PriceCalculator
+ * Updates the payment calculator display and totals
+ */
+function recalculatePrices() {
+  if (!window.vehicleData) return;
+
+  const data = window.vehicleData;
+  const validCustomAccessories = customAccessories.filter((a) => a && a.name);
+
+  // Calculate prices using PriceCalculator
+  const prices = PriceCalculator.calculate({
+    msrp: data.MSRPUnit || 0,
+    accessories: data.AccessoryItems || [],
+    customAccessories: validCustomAccessories,
+    discounts: data.DiscountItems || [],
+    rebates: data.MatItems || [],
+    fees: data.OTDItems || [],
+    tradeIn: 0, // Could add trade-in support later
+  });
+
+  // Update the hidden loan input for payment calculator
+  const loanInput = document.querySelector('input[name="loan"]');
+  if (loanInput) {
+    loanInput.value = prices.totalPrice;
+  }
+
+  // Update sales price display
+  const salesPriceDisplay = document.querySelector(".our-price-display .fs-2");
+  if (salesPriceDisplay) {
+    salesPriceDisplay.textContent = PriceCalculator.format(prices.salesPrice);
+  }
+
+  // Update total price display
+  const totalPriceDisplay = document.getElementById("totalPriceDisplay");
+  if (totalPriceDisplay) {
+    totalPriceDisplay.innerHTML = `
+      <div class="text-left fs-5 fw-bold mx-1">Total:<span class="float-end">${PriceCalculator.format(prices.totalPrice)}</span></div>
+    `;
+  }
+
+  // Update savings display
+  const savingsDisplay = document.getElementById("savingsDisplay");
+  if (savingsDisplay && prices.savings > 0) {
+    savingsDisplay.innerHTML = `
+      <div class="text-left fw-bold mx-1">Savings:<span class="float-end">${PriceCalculator.formatWhole(prices.savings)}</span></div>
+    `;
+  }
+
+  // Recalculate payment
+  if (typeof showpay === "function") {
+    showpay();
+  }
+}
+
+/**
+ * Get custom accessories as URL-safe string
+ * @returns {string} Encoded accessories string (name:price,name:price)
+ */
+function getCustomAccessoriesParam() {
+  const valid = customAccessories.filter((a) => a && a.name);
+  if (valid.length === 0) return "";
+  return valid.map((a) => `${encodeURIComponent(a.name)}:${a.price || 0}`).join(",");
+}
+
+/**
+ * Parse custom accessories from URL param string
+ * @param {string} param - Encoded accessories string
+ * @returns {Array} Array of {name, price} objects
+ */
+function parseCustomAccessoriesParam(param) {
+  if (!param) return [];
+  return param.split(",").map((item) => {
+    const [name, price] = item.split(":");
+    return {
+      name: decodeURIComponent(name || ""),
+      price: parseFloat(price) || 0,
+    };
+  });
 }

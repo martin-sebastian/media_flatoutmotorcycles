@@ -366,6 +366,13 @@ ul .nav-pill:hover {
   width: 100%;
   margin: 2px 0;
   padding: 5px 10px;
+  background-color: #f8f9fa !important;
+  border: 1px solid #dee2e6;
+  color: #212529 !important;
+}
+
+.card .card-title {
+  color: #212529 !important;
 }
 
 .payment-calculator {
