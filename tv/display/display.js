@@ -616,8 +616,8 @@ function renderMiddleDefault(data, displayData, customText) {
       <div class="tv-box p-3 d-flex align-items-center justify-content-around">
         <div id="qrCode" class="tv-qr"></div>
         <div class="d-flex flex-column justify-content-center align-items-center">
-          <img src="../../img/fom-app-logo-01.svg" alt="Logo" width="200" height="30" />
-          ${phone ? `<div class="mt-2 text-secondary">${phone}</div>` : ""}
+          <img src="../../img/fom-app-logo-01.svg" alt="Logo" width="260" height="60" />
+          ${phone ? `<div class="mt-3 h4 fw-semibold text-secondary text-center">${phone}</div>` : ""}
         </div>
       </div>
     </div>
