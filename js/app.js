@@ -1,3 +1,4 @@
+/* global moment */
 // Near the top of the file, add a cache object
 const DOM = {
 	table: null,
@@ -1440,6 +1441,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 				// Call the keyTag function and pass the stock number
 				keyTag(stockNumber);
+				// Restore saved Zebra printer IP and optional relay endpoint
+				const zebraIpInput = document.getElementById("zebraPrinterIp");
+				if (zebraIpInput) zebraIpInput.value = localStorage.getItem(ZEBRA_IP_KEY) || "192.168.1.74";
+				const zebraEndpointInput = document.getElementById("zebraEndpoint");
+				if (zebraEndpointInput) zebraEndpointInput.value = localStorage.getItem(ZEBRA_ENDPOINT_KEY) || "";
 			} else {
 				console.error("Stock number not found!");
 			}
@@ -1448,6 +1454,11 @@ document.addEventListener("DOMContentLoaded", () => {
 		// Handle printKeyTagBtn button click
 		if (event.target.closest("#printKeyTagBtn")) {
 			printKeyTags();
+		}
+
+		// Handle Print to Zebra button: send ZPL to printer via IP
+		if (event.target.closest("#printZebraKeyTagBtn")) {
+			printKeyTagToZebra();
 		}
 
 		// Handle printTag button click (legacy)
@@ -1544,6 +1555,72 @@ function printKeyTags() {
 	const includeVertical = document.getElementById("verticalKeyTagSwitch")?.checked || false;
 	if (window.KeyTagComponent) {
 		KeyTagComponent.print("#keytagHorizontal", "#keytagVertical", includeVertical);
+	}
+}
+
+/** Zebra printer IP localStorage key. */
+const ZEBRA_IP_KEY = "zebraPrinterIp";
+/** Zebra relay endpoint localStorage key (optional; when set, POST goes here instead of /api/zebra-print). */
+const ZEBRA_ENDPOINT_KEY = "zebraEndpoint";
+
+/**
+ * Send current key tag as ZPL to Zebra printer at configured IP (port 9100).
+ * Uses /api/zebra-print or run scripts/zebra-relay.js and point app to it.
+ */
+async function printKeyTagToZebra() {
+	const ipInput = document.getElementById("zebraPrinterIp");
+	const msgEl = document.getElementById("keytagMessage");
+	const labelEl = document.getElementById("keytagModalLabel");
+	if (!ipInput || !labelEl) return;
+	const printerIp = ipInput.value.trim();
+	if (!printerIp) {
+		if (msgEl) msgEl.innerHTML = `<div class="text-warning"><i class="bi bi-exclamation-triangle me-2"></i>Enter Zebra printer IP address.</div>`;
+		return;
+	}
+	const stockNumber = labelEl.textContent?.trim();
+	if (!stockNumber || stockNumber === "Stock Number") {
+		if (msgEl) msgEl.innerHTML = `<div class="text-warning"><i class="bi bi-exclamation-triangle me-2"></i>Load a key tag first (select a vehicle).</div>`;
+		return;
+	}
+	const vehicle = State.allItems.find(
+		(item) => (item.stockNumber || "").toUpperCase() === stockNumber.toUpperCase()
+	);
+	if (!vehicle || !window.KeyTagComponent) {
+		if (msgEl) msgEl.innerHTML = `<div class="text-warning"><i class="bi bi-exclamation-triangle me-2"></i>Vehicle data not found.</div>`;
+		return;
+	}
+	const data = {
+		StockNumber: vehicle.stockNumber || "",
+		Usage: vehicle.usage || "",
+		ModelYear: vehicle.year || "",
+		Manufacturer: vehicle.manufacturer || "",
+		ModelName: vehicle.modelName || "",
+		ModelCode: vehicle.modelCode || "",
+		Color: vehicle.color || "",
+		VIN: vehicle.vin || "",
+	};
+	const zpl = KeyTagComponent.toZpl(data);
+	const endpointInput = document.getElementById("zebraEndpoint");
+	const endpoint = endpointInput?.value?.trim() || "";
+	const url = endpoint || "/api/zebra-print";
+	try {
+		if (msgEl) msgEl.innerHTML = `<div class="text-secondary"><i class="bi bi-hourglass me-2"></i>Sending to printer…</div>`;
+		localStorage.setItem(ZEBRA_IP_KEY, printerIp);
+		if (endpoint) localStorage.setItem(ZEBRA_ENDPOINT_KEY, endpoint);
+		const res = await fetch(url, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ printerIp, port: 9100, zpl }),
+		});
+		const result = await res.json().catch(() => ({}));
+		if (res.ok && result.ok) {
+			if (msgEl) msgEl.innerHTML = `<div class="text-success"><i class="bi bi-check-circle me-2"></i>Sent to Zebra.</div>`;
+		} else {
+			const errMsg = result.error || (res.status === 502 ? "Printer unreachable. Use the relay on a PC that can reach the printer: node scripts/zebra-relay.js" : res.statusText) || "Print failed";
+			if (msgEl) msgEl.innerHTML = `<div class="text-danger"><i class="bi bi-x-circle me-2"></i>${errMsg}.</div>`;
+		}
+	} catch (err) {
+		if (msgEl) msgEl.innerHTML = `<div class="text-danger"><i class="bi bi-x-circle me-2"></i>${err.message || "Network error"}.</div>`;
 	}
 }
 
@@ -2109,8 +2186,6 @@ function updateTable() {
 				<button class="btn btn-dark btn-sm rounded-pill px-3 d-flex align-items-center dropdown-toggle mx-1 no-caret" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
 					<i class="bi bi-card-image ms-1 me-2"></i> <i class="bi bi-card-heading mx-1"></i> <i class="bi bi-tv mx-1"></i> 
 				</button>
-
-				
 			</div>
 		
 

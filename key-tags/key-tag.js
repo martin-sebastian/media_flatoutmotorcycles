@@ -186,6 +186,43 @@ function printKeyTag(horizontalContainer, verticalContainer = null, includeVerti
 }
 
 /**
+ * Escape ZPL field data (^ and \ must be escaped).
+ * @param {string} s - Raw string.
+ * @returns {string} - Escaped string for ^FD...^FS.
+ */
+function escapeZplField(s) {
+  if (s == null || s === "") return "";
+  return String(s).replace(/\\/g, "\\\\").replace(/\^/g, "\\^");
+}
+
+/**
+ * Generate ZPL for a horizontal key tag (1.625" x 2.125" @ 203 DPI).
+ * @param {object} data - Vehicle data (StockNumber, Usage, ModelYear, etc.).
+ * @returns {string} - ZPL string to send to printer.
+ */
+function keyTagToZpl(data) {
+  const w = 330; // 1.625in * 203
+  const h = 431; // 2.125in * 203
+  const lineH = 22;
+  const left = 10;
+  const safe = (v) => escapeZplField(v || "N/A");
+  const lines = [
+    safe(data.Usage),
+    safe(data.StockNumber),
+    safe(data.ModelYear),
+    safe(data.Manufacturer),
+    safe(data.ModelName),
+    safe(data.ModelCode),
+    safe(data.Color),
+    safe(data.VIN),
+  ];
+  const fields = lines
+    .map((text, i) => `^FO${left},${15 + i * lineH}^A0N,18,18^FD${text}^FS`)
+    .join("");
+  return `^XA^PW${w}^LL${h}^LH0,0${fields}^XZ`;
+}
+
+/**
  * Find vehicle data in the cached items array by stock number.
  * @param {Array} items - Array of vehicle items (from State.allItems).
  * @param {string} stockNumber - Stock number to find.
@@ -226,6 +263,7 @@ if (typeof window !== "undefined") {
     renderVertical: renderKeyTagVertical,
     clear: clearKeyTag,
     print: printKeyTag,
+    toZpl: keyTagToZpl,
     findVehicle: findVehicleByStockNumber,
     normalize: normalizeVehicleData,
   };
