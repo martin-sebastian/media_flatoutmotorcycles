@@ -75,7 +75,7 @@
 								</div>
 							</div>
 							<div class="col-12">
-								<label class="form-label d-block mt-3 text-muted">Layout</label>
+								<label class="form-label d-block mt-2 text-muted">Layout</label>
 								<div
 									class="btn-group"
 									role="group"
@@ -135,10 +135,10 @@
 											class="btn btn-outline-secondary d-none"
 											type="button"
 											id="clearImagesBtn">
-											<i class="bi bi-x-lg me-1"></i>Clear
+											<i class="bi bi-x-lg me-1"></i> Clear
 										</button>
-										<span class="text-secondary small"
-											>Select carousel images on the right.</span
+										<span class="text-secondary small"></span>
+											Select carousel images on the right.</span
 										>
 									</div>
 									<input
@@ -276,7 +276,7 @@
 			aria-hidden="true">
 			<div class="modal-dialog modal-fullscreen">
 				<div class="modal-content">
-					<div class="modal-header border-0">
+					<div class="modal-header border-bottom border-secondary-subtle">
 						<h5 class="modal-title" id="previewDisplayModalLabel">
 							TV Display Preview
 						</h5>
@@ -286,8 +286,8 @@
 							data-bs-dismiss="modal"
 							aria-label="Close"></button>
 					</div>
-					<div class="modal-body overflow-hidden">
-						<div class="tv-preview-stage">
+					<div class="modal-body">
+						<div class="tv-preview-stage overflow-y-auto">
 							<div class="tv-preview-grid">
 								<div class="tv-preview-card" id="previewLandscapeCard">
 									<div class="tv-preview-frame tv-preview-landscape">
@@ -300,7 +300,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="modal-footer border-0">
+					<div class="modal-footer border-top border-secondary-subtle">
 						<div class="btn-group me-3" role="group">
 							<button
 								type="button"
