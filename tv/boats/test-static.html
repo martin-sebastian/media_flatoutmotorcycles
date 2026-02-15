@@ -11,6 +11,13 @@
   </style>
 </head>
 <body class="tv-body" data-bs-theme="dark">
+  <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var theme = params.get("theme") || localStorage.getItem("theme") || "dark";
+      document.body.setAttribute("data-bs-theme", theme);
+    })();
+  </script>
   <div class="tv-layout-landscape">
     <div class="tv-landscape-skeleton">
       <div class="tv-region-carousel">

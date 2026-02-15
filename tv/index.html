@@ -9,10 +9,9 @@
 		<link rel="stylesheet" href="../css/style.css" />
 		<link rel="stylesheet" href="./tv.css" />
 	</head>
-	<body class="tv-body" data-bs-theme="dark">
-		<div class="py-3"></div>
+	<body class="tv-body">
 		<header
-			class="fixed-top bg-body-tertiary border-bottom border-secondary-subtle">
+			class="fixed-top sticky bg-body-tertiary border-bottom border-secondary-subtle">
 			<div
 				class="container-fluid d-flex align-items-center justify-content-between py-2">
 				<a href="../" class="">
@@ -22,7 +21,12 @@
 						width="180"
 						height="27" />
 				</a>
-				<div class="d-flex align-items-center gap-2">
+				<div class="d-flex align-items-center gap-3">
+					<a
+						href="./templates/"
+						class="badge text-bg-secondary text-decoration-none py-2 px-3"
+						>Template Refs</a
+					>
 					<span class="badge text-bg-danger h5 py-2 px-3 mb-0 me-2"
 						>TV Launcher</span
 					>
@@ -35,13 +39,12 @@
 				</div>
 			</div>
 		</header>
-		<main class="container mt-5">
-			<div
-				class="row justify-content-center border border-tertiary rounded-4 g-0">
-				<div class="col-12 col-lg-7">
-					<div class="tv-panel p-3 m-2">
-						<div class="d-flex flex-column gap-4 rounded-4">
-							<div class="w-100">
+
+		<main class="container-fluid pt-4 pb-4">
+			<div id="tvLauncherRow" class="d-flex justify-content-center">
+				<div class="tv-panel p-4" style="max-width: 480px; width: 100%;">
+						<div class="d-flex flex-column gap-3">
+							<div>
 								<label for="stockInput" class="form-label"
 									>Stock Number(s)</label
 								>
@@ -55,8 +58,7 @@
 									comma-separated for grid (up to 10).
 								</div>
 							</div>
-							<!-- Vehicle Preview -->
-							<div class="col-12 d-none" id="vehiclePreview">
+							<div id="vehiclePreview" class="d-none">
 								<div
 									class="d-flex align-items-center gap-3 p-3 rounded"
 									style="background: rgba(255, 255, 255, 0.05)">
@@ -65,7 +67,7 @@
 										src=""
 										alt="Vehicle"
 										class="rounded"
-										style="width: 80px; height: 60px; object-fit: cover" />
+										style="width: 40px; height: 30px; object-fit: cover" />
 									<div>
 										<div id="vehiclePreviewTitle" class="fw-semibold"></div>
 										<div
@@ -74,28 +76,25 @@
 									</div>
 								</div>
 							</div>
-							<div class="col-12">
-								<label class="form-label d-block mt-2 text-muted">Layout</label>
+							<div>
+								<label class="form-label text-muted">Layout</label>
 								<div
-									class="btn-group"
+									class="btn-group w-100"
 									role="group"
 									aria-label="Layout selection">
 									<input
 										type="radio"
-										class="btn-check"
+										class="btn-check text-white"
 										name="layoutOption"
 										id="layoutPortrait"
 										value="portrait"
 										autocomplete="off"
 										checked />
-									<label class="btn btn-outline-danger" for="layoutPortrait">
-										<div
-											class="d-flex align-items-center justify-content-center">
-											<div style="transform: rotate(270deg)">
-												<i class="bi bi-tv-fill"></i>
-											</div>
-											<div class="ms-2">Portrait</div>
-										</div>
+									<label
+										class="btn btn-outline-danger d-flex flex-column align-items-center py-2"
+										for="layoutPortrait">
+										<i class="bi bi-phone-portrait fs-5"></i>
+										<span class="small">Portrait</span>
 									</label>
 									<input
 										type="radio"
@@ -104,8 +103,11 @@
 										id="layoutLandscape"
 										value="landscape"
 										autocomplete="off" />
-									<label class="btn btn-outline-danger" for="layoutLandscape">
-										<i class="bi bi-tv-fill me-2"></i> Landscape
+									<label
+										class="btn btn-outline-danger d-flex flex-column align-items-center py-2"
+										for="layoutLandscape">
+										<i class="bi bi-tv-fill fs-5"></i>
+										<span class="small">Landscape</span>
 									</label>
 									<input
 										type="radio"
@@ -114,13 +116,16 @@
 										id="layoutGrid"
 										value="grid"
 										autocomplete="off" />
-									<label class="btn btn-outline-danger" for="layoutGrid">
-										<i class="bi bi-grid-3x3-gap me-2"></i> Grid (10)
+									<label
+										class="btn btn-outline-danger d-flex flex-column align-items-center py-2"
+										for="layoutGrid">
+										<i class="bi bi-grid-3x3-gap fs-5"></i>
+										<span class="small">Grid (10)</span>
 									</label>
 								</div>
 							</div>
 							<div id="singleVehicleOptions">
-								<div class="col-12">
+								<div class="col-auto">
 									<label class="form-label d-block mt-3 text-muted"
 										>Image carousel</label
 									>
@@ -137,9 +142,9 @@
 											id="clearImagesBtn">
 											<i class="bi bi-x-lg me-1"></i> Clear
 										</button>
-										<span class="text-secondary small"></span>
-											Select carousel images on the right.</span
-										>
+									</div>
+									<div id="tvImagesPanel" class="tv-images-panel mt-3">
+										<div id="imageResults" class="row g-2 mt-2"></div>
 									</div>
 									<input
 										type="url"
@@ -147,14 +152,11 @@
 										id="imageUrlInput"
 										placeholder="https://..." />
 								</div>
-
-								<div class="col-12">
-									<label class="form-label d-block mt-4 text-muted"
-										>Vehicle colors</label
-									>
+								<div class="mt-2">
+									<label class="form-label text-muted">Vehicle colors</label>
 									<div class="row g-2">
-										<div class="col-12 col-md-4">
-											<div class="d-flex align-items-center gap-0">
+										<div class="col-auto col-sm-4">
+											<div class="d-flex align-items-center gap-2">
 												<input
 													type="color"
 													class="form-control form-control-color rounded-circle"
@@ -167,8 +169,8 @@
 												>
 											</div>
 										</div>
-										<div class="col-12 col-md-4">
-											<div class="d-flex align-items-center gap-0">
+										<div class="col-auto col-sm-4">
+											<div class="d-flex align-items-center gap-2">
 												<input
 													type="color"
 													class="form-control form-control-color rounded-circle"
@@ -183,8 +185,8 @@
 												>
 											</div>
 										</div>
-										<div class="col-12 col-md-4">
-											<div class="d-flex align-items-center gap-0">
+										<div class="col-auto col-sm-4">
+											<div class="d-flex align-items-center gap-2">
 												<input
 													type="color"
 													class="form-control form-control-color rounded-circle"
@@ -201,10 +203,8 @@
 										</div>
 									</div>
 								</div>
-								<div class="col-12">
-									<label
-										for="customTextInput"
-										class="form-label d-block mt-4 text-muted"
+								<div>
+									<label for="customTextInput" class="form-label text-muted"
 										>Custom message</label
 									>
 									<textarea
@@ -214,10 +214,10 @@
 										placeholder="Boat show special, etc."></textarea>
 								</div>
 							</div>
-							<div class="col-12 d-none">
+							<div class="d-none">
 								<label class="form-label d-block">Slideshow range</label>
 								<div class="row g-2">
-									<div class="col-6">
+									<div class="col-md-6">
 										<label for="slideStartInput" class="form-label"
 											>Start on image</label
 										>
@@ -241,8 +241,8 @@
 									</div>
 								</div>
 							</div>
-							<div class="col-12">
-								<div class="form-text d-none">
+							<div class="d-none">
+								<div class="form-text">
 									Uses the first image by default. Hero selection overrides it.
 								</div>
 							</div>
@@ -259,35 +259,34 @@
 						</div>
 					</div>
 				</div>
-				<div class="col-12 col-lg-5">
-					<div class="d-flex flex-column gap-3 p-2 rounded-4">
-						<h5 class="text-white d-none">Image Choices</h5>
-						<div id="imageResults" class="row g-3"></div>
-					</div>
-				</div>
 			</div>
 		</main>
 
 		<div
-			class="modal fade"
+			class="modal fade tv-preview-modal"
 			id="previewDisplayModal"
 			tabindex="-1"
 			aria-labelledby="previewDisplayModalLabel"
 			aria-hidden="true">
-			<div class="modal-dialog modal-fullscreen">
-				<div class="modal-content">
-					<div class="modal-header border-bottom border-secondary-subtle">
-						<h5 class="modal-title" id="previewDisplayModalLabel">
+			<div class="modal-dialog modal-xl modal-dialog-centered">
+				<div class="modal-content text-secondary d-flex flex-column">
+					<div
+						class="modal-header border-bottom border-secondary-subtle flex-shrink-0">
+						<h5
+							class="modal-title h5 fw-bold text-secondary"
+							id="previewDisplayModalLabel">
 							TV Display Preview
 						</h5>
 						<button
 							type="button"
-							class="btn-close btn-close-white"
+							class="btn-close btn-close-secondary"
 							data-bs-dismiss="modal"
 							aria-label="Close"></button>
 					</div>
-					<div class="modal-body overflow-auto p-3">
-						<div class="tv-preview-zoomable-wrapper d-flex justify-content-center align-items-start min-vh-100">
+					<div
+						class="modal-body overflow-auto p-3 text-secondary dots tv-preview-modal-body flex-grow-1 flex-shrink-1 min-h-0">
+						<div
+							class="tv-preview-zoomable-wrapper d-flex justify-content-center align-items-start">
 							<div id="tvPreviewZoomable" class="tv-preview-zoomable">
 								<div class="tv-preview-frame tv-preview-landscape">
 									<iframe
@@ -298,46 +297,56 @@
 							</div>
 						</div>
 					</div>
-					<div class="modal-footer border-top border-secondary-subtle">
-						<div class="btn-group me-3" role="group">
+					<div
+						class="modal-footer border-top border-secondary-subtle flex-shrink-0">
+						<button type="cancel" class="btn btn-secondary" type="button">
+							Cancel
+						</button>
+						<div
+							class="btn-group me-3 opacity-90"
+							role="group"
+							style="position: absolute; right: 0; top: 80px">
 							<button
 								type="button"
-								class="btn btn-outline-light btn-sm"
+								class="btn btn-secondary"
 								id="previewZoomOutBtn"
 								title="Zoom out">
 								<i class="bi bi-zoom-out"></i>
 							</button>
 							<button
 								type="button"
-								class="btn btn-outline-light btn-sm"
+								class="btn btn-secondary"
 								id="previewZoomResetBtn"
 								title="Fit to screen">
 								Fit
 							</button>
 							<button
 								type="button"
-								class="btn btn-outline-light btn-sm"
+								class="btn btn-secondary"
 								id="previewZoomInBtn"
 								title="Zoom in">
 								<i class="bi bi-zoom-in"></i>
 							</button>
 						</div>
+						<label>TV Display URL</label>
 						<input
 							type="text"
 							class="form-control form-control-sm border-secondary me-2"
 							id="urlOutput"
 							readonly
-							style="max-width: 350px" />
+							style="max-width: 400px" />
 						<button
 							type="button"
-							class="btn btn-outline-light btn-sm me-1"
+							class="btn btn-secondary btn-sm me-1"
 							id="copyUrlBtn">
 							<i class="bi bi-clipboard"></i>
+							Copy URL
 						</button>
 						<button
 							type="button"
-							class="btn btn-outline-secondary btn-sm"
+							class="btn btn-secondary btn-sm"
 							id="previewOpenBtn">
+							Open Link
 							<i class="bi bi-box-arrow-up-right"></i>
 						</button>
 					</div>

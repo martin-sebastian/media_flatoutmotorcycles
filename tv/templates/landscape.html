@@ -1,21 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="tv-html">
 	<head>
 		<meta charset="utf-8" />
-		<title>Landscape Template Reference (1920x1080)</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Landscape Template Reference (1920×1080)</title>
+		<link rel="stylesheet" href="../../css/bootstrap.css" />
+		<link rel="stylesheet" href="../../css/bootstrap-icons.css" />
+		<link rel="stylesheet" href="../../css/style.css" />
+		<link rel="stylesheet" href="../tv.css" />
 		<style>
-			* { box-sizing: border-box; margin: 0; padding: 0; }
-			body { background: #1a1a1a; display: flex; justify-content: center; padding: 20px; font-family: system-ui; }
-			.wrapper { max-width: 600px; }
-			h1 { color: #888; font-size: 14px; margin-bottom: 10px; text-align: center; }
-			.container { 
-				width: 480px; 
-				height: 270px; 
-				background: #121212; 
-				padding: 3px;
-				border-radius: 4px;
-			}
-			.skeleton {
+			.tv-skeleton-ref {
 				width: 100%;
 				height: 100%;
 				display: grid;
@@ -23,59 +17,84 @@
 				grid-template-rows: 1fr 1fr;
 				gap: 3px;
 			}
-			.cell {
-				background: rgba(255,255,255,0.05);
-				border: 1px dashed rgba(255,255,255,0.2);
+			.tv-skeleton-ref .cell {
+				background: rgba(255, 255, 255, 0.05);
+				border: 1px dashed rgba(255, 255, 255, 0.2);
 				border-radius: 4px;
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				color: #666;
+				color: var(--bs-secondary);
 				font-size: 9px;
 				text-align: center;
 			}
-			.stack {
+			.tv-skeleton-ref .stack {
 				display: flex;
 				flex-direction: column;
 				gap: 3px;
 			}
-			.stack .cell {
+			.tv-skeleton-ref .stack .cell {
 				flex: 1;
 			}
-			.carousel { grid-area: 1 / 1 / 2 / 2; background: rgba(220,53,69,0.15); }
-			.right-stack { grid-area: 1 / 2 / 2 / 3; }
-			.left-stack { grid-area: 2 / 1 / 3 / 2; }
-			.video { grid-area: 2 / 2 / 3 / 3; background: rgba(13,110,253,0.15); }
-			pre { 
-				background: #0d0d0d; 
-				padding: 12px; 
-				border-radius: 4px; 
-				color: #666; 
-				font-size: 10px; 
-				margin-top: 16px;
-				line-height: 1.4;
-				overflow-x: auto;
+			.tv-skeleton-ref .carousel {
+				grid-area: 1 / 1 / 2 / 2;
+				background: rgba(220, 53, 69, 0.15);
+			}
+			.tv-skeleton-ref .right-stack {
+				grid-area: 1 / 2 / 2 / 3;
+			}
+			.tv-skeleton-ref .left-stack {
+				grid-area: 2 / 1 / 3 / 2;
+			}
+			.tv-skeleton-ref .video {
+				grid-area: 2 / 2 / 3 / 3;
+				background: rgba(13, 110, 253, 0.15);
 			}
 		</style>
 	</head>
-	<body>
-		<div class="wrapper">
-			<h1>Landscape: 1920×1080px (2×2 Symmetric)</h1>
-			<div class="container">
-				<div class="skeleton">
-					<div class="cell carousel">Carousel<br>(942×522)</div>
-					<div class="stack right-stack">
-						<div class="cell">Pricing<br>(942×255)</div>
-						<div class="cell">Fees<br>(942×255)</div>
-					</div>
-					<div class="stack left-stack">
-						<div class="cell">Features<br>(942×255)</div>
-						<div class="cell">QR<br>(942×255)</div>
-					</div>
-					<div class="cell video">Video<br>(942×522)</div>
-				</div>
+	<body class="tv-body" data-bs-theme="dark">
+		<header
+			class="fixed-top sticky bg-body-tertiary border-bottom border-secondary-subtle">
+			<div
+				class="container-fluid d-flex align-items-center justify-content-between py-2">
+				<a href="../" class="d-flex align-items-center gap-2">
+					<i class="bi bi-arrow-left"></i>
+					<img
+						src="../../img/fom-app-logo-01.svg"
+						alt="Flatout Motorsports"
+						width="140"
+						height="21" />
+				</a>
+				<span class="badge text-bg-danger">Template Reference</span>
 			</div>
-			<pre>
+		</header>
+		<main class="container-fluid pt-5 mt-5 pb-4">
+			<div class="row justify-content-center">
+				<div class="col-12 col-md-8 col-lg-6">
+					<h1 class="h4 text-secondary mb-3">
+						Landscape: 1920×1080px (2×2 Symmetric)
+					</h1>
+					<div
+						class="rounded overflow-hidden border border-secondary-subtle p-2"
+						style="background: var(--bs-body-bg)">
+						<div
+							class="tv-skeleton-ref mx-auto"
+							style="width: 480px; height: 270px">
+							<div class="cell carousel">Carousel<br />(942×522)</div>
+							<div class="stack right-stack">
+								<div class="cell">Pricing<br />(942×255)</div>
+								<div class="cell">Fees<br />(942×255)</div>
+							</div>
+							<div class="stack left-stack">
+								<div class="cell">Features<br />(942×255)</div>
+								<div class="cell">QR<br />(942×255)</div>
+							</div>
+							<div class="cell video">Video<br />(942×522)</div>
+						</div>
+					</div>
+					<pre
+						class="bg-dark text-secondary small p-3 rounded overflow-auto mt-3"
+						style="font-size: 0.7rem; line-height: 1.4">
 ┌──────────────────┬──────────────────┐
 │                  │     Pricing      │
 │    Carousel      ├──────────────────┤
@@ -89,8 +108,11 @@
 Grid: 12px padding, 12px gaps
 Columns: 942px × 2
 Rows: 522px × 2
-Stacked boxes: 255px height each
-			</pre>
-		</div>
+Stacked boxes: 255px height each</pre
+					>
+				</div>
+			</div>
+		</main>
+		<script src="../../js/bootstrap.bundle.js"></script>
 	</body>
 </html>

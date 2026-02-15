@@ -181,7 +181,7 @@
                 <button type="button" class="btn btn-dark text-start" title="Create custom key tag" onclick="openKeyTagsByStockNumberModal('${stockNumber}')">
                   <i class="bi bi-tag me-3"></i> Create Custom Label
                 </button>
-                <button type="button" class="btn btn-dark text-start" title="TV Display" onclick="window.location.href = './tv/'">
+                <button type="button" class="btn btn-dark text-start" title="TV Display" onclick="openTvWorkspaceModal()">
                   <i class="bi bi-tv me-3"></i> TV Display Launcher
                 </button>
                 <button type="button" class="btn btn-dark text-start" title="Create custom quote" onclick="window.location.href = './quote/'">
@@ -219,8 +219,8 @@
                 <button type="button" id="forceRefreshBtn" class="btn btn-outline-secondary btn-sm rounded-3 my-2 px-3" title="Refresh inventory data">
                   <i class="bi bi-arrow-clockwise h6 my-1"></i> <span class="mx-1 pe-2 fw-normal d-none d-lg-inline-block">API Data</span>
                 </button>
-                <button id="sendToTvGridBtn" class="btn btn-danger btn-sm rounded-3 my-2 px-3 d-none d-lg-block" disabled title="Send selected items to TV Grid">
-                  <i class="bi bi-tv me-1"></i>TV Grid (<span id="selectedCount">0</span>)
+                <button id="sendToTvGridBtn" class="btn btn-danger btn-sm rounded-3 my-2 px-3 d-none d-lg-block" disabled title="Open TV Workspace with selected vehicles">
+                  <i class="bi bi-tv me-1"></i>TV Display (<span id="selectedCount">0</span>)
                 </button>
               </div>
             </div>
@@ -624,6 +624,132 @@
           </div>
           <div class="modal-footer d-print-none">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="tvWorkspaceModal" tabindex="-1" aria-labelledby="tvWorkspaceModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content tv-workspace-content">
+          <div class="modal-header border-bottom border-secondary-subtle">
+            <h5 class="modal-title" id="tvWorkspaceModalLabel">
+              <i class="bi bi-tv me-2"></i>TV Display Workspace
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0 overflow-hidden">
+            <div class="tv-workspace-layout">
+              <aside class="tv-workspace-sidebar border-end border-secondary-subtle">
+                <div class="d-flex flex-column gap-3">
+                  <div>
+                    <label class="form-label small text-uppercase text-secondary mb-2">Layout</label>
+                    <div class="btn-group w-100" role="group" aria-label="TV layout selection">
+                      <input type="radio" class="btn-check" name="tvLayoutOption" id="tvLayoutPortrait" value="portrait" autocomplete="off" checked>
+                      <label class="btn btn-outline-danger" for="tvLayoutPortrait">Portrait</label>
+                      <input type="radio" class="btn-check" name="tvLayoutOption" id="tvLayoutLandscape" value="landscape" autocomplete="off">
+                      <label class="btn btn-outline-danger" for="tvLayoutLandscape">Landscape</label>
+                      <input type="radio" class="btn-check" name="tvLayoutOption" id="tvLayoutGrid" value="grid" autocomplete="off">
+                      <label class="btn btn-outline-danger" for="tvLayoutGrid">10-Up Grid</label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="d-flex align-items-center justify-content-between">
+                      <label for="tvWorkspaceStockInput" class="form-label mb-1">Stock Number(s)</label>
+                      <button type="button" class="btn btn-sm btn-outline-secondary" id="tvUseSelectedBtn">Use Selected</button>
+                    </div>
+                    <input type="text" id="tvWorkspaceStockInput" class="form-control" placeholder="SD21374">
+                    <div id="tvWorkspaceStockHelp" class="form-text">Single stock number for portrait/landscape.</div>
+                  </div>
+
+                  <div>
+                    <label for="tvWorkspaceThemeSelect" class="form-label mb-1">Theme</label>
+                    <select id="tvWorkspaceThemeSelect" class="form-select">
+                      <option value="dark">Dark</option>
+                      <option value="light">Light</option>
+                    </select>
+                  </div>
+
+                  <div id="tvWorkspaceSingleOptions" class="d-flex flex-column gap-3">
+                    <div>
+                      <label for="tvWorkspaceNoteInput" class="form-label mb-1">Custom Message</label>
+                      <textarea id="tvWorkspaceNoteInput" class="form-control" rows="3" placeholder="Boat show special, etc."></textarea>
+                    </div>
+                    <div>
+                      <label class="form-label mb-1">Vehicle Colors</label>
+                      <div class="row g-2">
+                        <div class="col-4">
+                          <input type="color" id="tvWorkspaceSwatchInput" class="form-control form-control-color w-100" title="Primary color" value="#4bd2b1">
+                        </div>
+                        <div class="col-4">
+                          <input type="color" id="tvWorkspaceAccent1Input" class="form-control form-control-color w-100" title="Secondary color" value="#1f6feb">
+                        </div>
+                        <div class="col-4">
+                          <input type="color" id="tvWorkspaceAccent2Input" class="form-control form-control-color w-100" title="Accent color" value="#f97316">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <label for="tvWorkspaceSlideStartInput" class="form-label mb-1">Slide Start</label>
+                        <input type="number" id="tvWorkspaceSlideStartInput" class="form-control" min="1" value="2">
+                      </div>
+                      <div class="col-6">
+                        <label for="tvWorkspaceSlideEndInput" class="form-label mb-1">Slide End</label>
+                        <input type="number" id="tvWorkspaceSlideEndInput" class="form-control" min="1" value="6">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label for="tvWorkspaceUrlOutput" class="form-label mb-1">TV Display URL</label>
+                    <div class="input-group input-group-sm">
+                      <input type="text" id="tvWorkspaceUrlOutput" class="form-control" readonly>
+                      <button type="button" class="btn btn-outline-secondary" id="tvWorkspaceCopyUrlBtn" title="Copy URL">
+                        <i class="bi bi-clipboard"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-danger" id="tvWorkspacePreviewBtn">
+                      <i class="bi bi-eye me-2"></i>Refresh Preview
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="tvWorkspaceOpenLinkBtn">
+                      <i class="bi bi-box-arrow-up-right me-2"></i>Open Link
+                    </button>
+                  </div>
+                </div>
+              </aside>
+
+              <section class="tv-workspace-preview-panel">
+                <div class="tv-workspace-preview-shell" id="tvWorkspacePreviewShell">
+                  <div class="tv-workspace-preview-toolbar" role="group" aria-label="Preview zoom controls">
+                    <button type="button" class="btn btn-sm btn-secondary" id="tvWorkspaceZoomOutBtn" title="Zoom out">
+                      <i class="bi bi-zoom-out"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" id="tvWorkspaceZoomFitBtn" title="Fit preview">Fit</button>
+                    <button type="button" class="btn btn-sm btn-secondary" id="tvWorkspaceZoomInBtn" title="Zoom in">
+                      <i class="bi bi-zoom-in"></i>
+                    </button>
+                  </div>
+                  <div id="tvWorkspacePreviewLoading" class="tv-workspace-preview-loading" aria-live="polite">
+                    <div class="spinner-border spinner-border-sm text-light me-2" role="status" aria-hidden="true"></div>
+                    Loading preview...
+                  </div>
+                  <div id="tvWorkspacePreviewZoomable" class="tv-workspace-preview-zoomable">
+                    <iframe id="tvWorkspacePreviewFrame" title="TV Display Preview" loading="lazy"></iframe>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+          <div class="modal-footer border-top border-secondary-subtle">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-danger" id="tvWorkspaceCopyUrlFooterBtn">
+              <i class="bi bi-clipboard-check me-2"></i>Copy URL
+            </button>
           </div>
         </div>
       </div>

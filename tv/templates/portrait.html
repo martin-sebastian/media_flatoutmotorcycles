@@ -1,44 +1,37 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="tv-html">
 	<head>
 		<meta charset="utf-8" />
-		<title>Portrait Template Reference (1080x1920)</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Portrait Template Reference (1080×1920)</title>
+		<link rel="stylesheet" href="../../css/bootstrap.css" />
+		<link rel="stylesheet" href="../../css/bootstrap-icons.css" />
+		<link rel="stylesheet" href="../../css/style.css" />
+		<link rel="stylesheet" href="../tv.css" />
 		<style>
-			* { box-sizing: border-box; margin: 0; padding: 0; }
-			body { background: #1a1a1a; display: flex; justify-content: center; padding: 20px; font-family: system-ui; }
-			h1 { color: #888; font-size: 12px; margin-bottom: 10px; text-align: center; }
-			h2 { color: #666; font-size: 10px; margin: 15px 0 5px; }
-			
-			.container { width: 270px; height: 480px; background: #121212; }
-			
-			/* Skeleton: equal spacing, rounded corners */
-			.tv-skeleton {
+			.tv-skeleton-ref {
 				width: 100%;
 				height: 100%;
 				display: grid;
 				grid-template-columns: 1fr;
-				grid-template-rows: 175px 145px 148px; /* 700px 580px 592px scaled */
+				grid-template-rows: 175px 145px 148px;
 				gap: 3px;
 				padding: 3px;
 				box-sizing: border-box;
 			}
-			
-			.region {
+			.tv-skeleton-ref .region {
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				color: #444;
+				color: var(--bs-secondary);
 				font-size: 9px;
 				text-align: center;
 				border-radius: 4px;
 			}
-			
-			.region-carousel { background: rgba(220,53,69,0.2); }
-			.region-middle { background: transparent; }
-			.region-video { background: rgba(13,110,253,0.2); }
-			
-			/* Middle grid: gaps and margins */
-			.middle-grid {
+			.tv-skeleton-ref .region-carousel { background: rgba(220,53,69,0.2); }
+			.tv-skeleton-ref .region-middle { background: transparent; }
+			.tv-skeleton-ref .region-video { background: rgba(13,110,253,0.2); }
+			.tv-skeleton-ref .middle-grid {
 				display: grid;
 				grid-template-columns: 1fr 1fr;
 				grid-template-rows: 1fr 1fr;
@@ -46,43 +39,47 @@
 				width: 100%;
 				height: 100%;
 			}
-			
-			.box {
+			.tv-skeleton-ref .box {
 				background: rgba(255,255,255,0.08);
 				border-radius: 4px;
 				display: flex;
 				align-items: center;
 				justify-content: center;
 				font-size: 8px;
-				color: #666;
+				color: var(--bs-secondary);
 			}
 		</style>
 	</head>
-	<body>
-		<div>
-			<h1>Portrait Skeleton: 1080×1920px</h1>
-			<div class="container">
-				<div class="tv-skeleton">
-					<div class="region region-carousel">
-						Carousel 3:2<br>(720px)
-					</div>
-					<div class="region region-middle">
-						<div class="middle-grid">
-							<div class="box">Pricing</div>
-							<div class="box">Fees</div>
-							<div class="box">Welcome</div>
-							<div class="box">QR</div>
+	<body class="tv-body" data-bs-theme="dark">
+		<header class="fixed-top sticky bg-body-tertiary border-bottom border-secondary-subtle">
+			<div class="container-fluid d-flex align-items-center justify-content-between py-2">
+				<a href="../" class="d-flex align-items-center gap-2">
+					<i class="bi bi-arrow-left"></i>
+					<img src="../../img/fom-app-logo-01.svg" alt="Flatout Motorsports" width="140" height="21" />
+				</a>
+				<span class="badge text-bg-danger">Template Reference</span>
+			</div>
+		</header>
+		<main class="container-fluid pt-5 pb-4">
+			<div class="row justify-content-center">
+				<div class="col-12 col-md-8 col-lg-6">
+					<h1 class="h4 text-secondary mb-3">Portrait Skeleton: 1080×1920px</h1>
+					<div class="rounded overflow-hidden border border-secondary-subtle" style="background: var(--bs-body-bg);">
+						<div class="tv-skeleton-ref mx-auto" style="width: 270px; height: 480px;">
+							<div class="region region-carousel">Carousel 3:2<br>(720px)</div>
+							<div class="region region-middle">
+								<div class="middle-grid">
+									<div class="box">Pricing</div>
+									<div class="box">Fees</div>
+									<div class="box">Welcome</div>
+									<div class="box">QR</div>
+								</div>
+							</div>
+							<div class="region region-video">Video 16:9<br>(608px)</div>
 						</div>
 					</div>
-					<div class="region region-video">
-						Video 16:9<br>(608px)
-					</div>
-				</div>
-			</div>
-			
-			<h2>Architecture</h2>
-			<pre style="color:#555;font-size:8px;line-height:1.4;">
-Skeleton (12px gaps + padding):
+					<h2 class="h6 text-secondary mt-4 mb-2">Architecture</h2>
+					<pre class="bg-dark text-secondary small p-3 rounded overflow-auto" style="font-size: 0.75rem; line-height: 1.4;">Skeleton (12px gaps + padding):
 ├─ tv-region-carousel (700px, rounded)
 ├─ tv-region-middle (580px)
 │   └─ tv-middle-grid (12px gaps)
@@ -90,8 +87,10 @@ Skeleton (12px gaps + padding):
 │       ├─ tv-box
 │       ├─ tv-box
 │       └─ tv-box
-└─ tv-region-video (592px, rounded)
-			</pre>
-		</div>
+└─ tv-region-video (592px, rounded)</pre>
+				</div>
+			</div>
+		</main>
+		<script src="../../js/bootstrap.bundle.js"></script>
 	</body>
 </html>

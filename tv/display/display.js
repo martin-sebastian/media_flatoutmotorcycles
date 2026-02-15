@@ -33,7 +33,7 @@ function getQueryParams() {
     accent1: (config.accent1 || params.get("accent1") || "").trim(),
     accent2: (config.accent2 || params.get("accent2") || "").trim(),
     slides: slideUrls,
-    theme: (config.theme || params.get("theme") || "dark").trim(),
+    theme: (config.theme || params.get("theme") || localStorage.getItem("theme") || "dark").trim(),
     slideStart: Number.parseInt(config.slideStart || params.get("slideStart") || "1", 10),
     slideEnd: Number.parseInt(config.slideEnd || params.get("slideEnd") || "6", 10),
     preview: config.preview || ["1", "true", "yes"].includes(
@@ -721,11 +721,11 @@ function renderLandscapeSingle(data, imageUrl, customText, apiData, preferredIma
           <!-- Pricing Box -->
           <div class="tv-box p-3 d-flex flex-column">
             <div class="h2 text-danger fw-bold text-uppercase mb-2">Show Special</div>
-            <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="d-flex align-items-center gap-2 mb-1"> 
               <span class="badge bg-danger">${data.usage || "N/A"}</span>
               <span class="text-secondary text-uppercase fw-semibold small">${data.title || ""}</span>
             </div>
-            <div class="text-light small">${data.stockNumber || ""}</div>
+            <div class="text-secondary small">${data.stockNumber || ""}</div>
             ${colorName ? `
               <div class="d-flex align-items-center gap-2 mt-1">
                 <div class="d-flex align-items-center gap-2">

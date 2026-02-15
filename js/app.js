@@ -37,6 +37,9 @@ const DOM = {
 	},
 };
 
+/** Set to true to enable home search filter suggestions (currently disabled - not working as intended). */
+const SEARCH_SUGGESTIONS_ENABLED = false;
+
 // Near the top of the file, add a global storage fallback
 let memoryStorage = {
 	vehiclesCache: null,
@@ -318,6 +321,7 @@ function populateTypeDropdown(types) {
 
 // Add near the other dropdown population functions
 function populateSearchSuggestions(itemsArray) {
+	if (!SEARCH_SUGGESTIONS_ENABLED) return;
 	// This function is called when data is loaded, but suggestions
 	// will only show when user types 1-2 characters
 
@@ -368,6 +372,10 @@ function populateSearchSuggestions(itemsArray) {
 
 // This function will be called when the user types in the search box
 function updateSearchSuggestions(query) {
+	if (!SEARCH_SUGGESTIONS_ENABLED) {
+		clearSearchSuggestions();
+		return;
+	}
 	if (!query || query.length < 1) {
 		// Clear suggestions if query is empty or too short
 		clearSearchSuggestions();
@@ -1518,8 +1526,8 @@ function keyTag(stockNumber) {
 	if (!vehicle) {
 		// Show placeholder and error message
 		if (window.KeyTagComponent) {
-			KeyTagComponent.clear(horizontalContainer, "horizontal");
-			KeyTagComponent.clear(verticalContainer, "vertical");
+			window.KeyTagComponent.clear(horizontalContainer, "horizontal");
+			window.KeyTagComponent.clear(verticalContainer, "vertical");
 		}
 		if (messageEl) {
 			messageEl.innerHTML = `<div class="text-warning"><i class="bi bi-exclamation-triangle me-2"></i>Stock number not found in inventory.</div>`;
@@ -1541,8 +1549,8 @@ function keyTag(stockNumber) {
 
 	// Render using component
 	if (window.KeyTagComponent) {
-		KeyTagComponent.render(data, horizontalContainer);
-		KeyTagComponent.renderVertical(data, verticalContainer);
+		window.KeyTagComponent.render(data, horizontalContainer);
+		window.KeyTagComponent.renderVertical(data, verticalContainer);
 	}
 
 	console.log("Key tag rendered from cached XML:", data);
@@ -1573,7 +1581,7 @@ function toggleVerticalKeyTag() {
 function printKeyTags() {
 	const includeVertical = document.getElementById("verticalKeyTagSwitch")?.checked || false;
 	if (window.KeyTagComponent) {
-		KeyTagComponent.print("#keytagHorizontal", "#keytagVertical", includeVertical);
+		window.KeyTagComponent.print("#keytagHorizontal", "#keytagVertical", includeVertical);
 	}
 }
 
@@ -1618,7 +1626,7 @@ async function printKeyTagToZebra() {
 		Color: vehicle.color || "",
 		VIN: vehicle.vin || "",
 	};
-	const zpl = KeyTagComponent.toZpl(data);
+	const zpl = window.KeyTagComponent.toZpl(data);
 	const endpointInput = document.getElementById("zebraEndpoint");
 	const endpoint = endpointInput?.value?.trim() || "";
 	const url = endpoint || "/api/zebra-print";
@@ -1674,7 +1682,7 @@ function previewKeyTagInLabelary() {
 		Color: vehicle.color || "",
 		VIN: vehicle.vin || "",
 	};
-	const zpl = KeyTagComponent.toZpl(data);
+	const zpl = window.KeyTagComponent.toZpl(data);
 	window.open(LABELARY_API + encodeURIComponent(zpl), "_blank", "noopener");
 }
 
@@ -2220,15 +2228,15 @@ function updateTable() {
 					
 					<li><hr class="dropdown-divider m-0"></li>
 
-					<li class="small">
-						<a 
-						href="javascript:void(0);" 
-						type="button"
-						class="dropdown-item pe-5"
-						title="Goto TV Display Launcher"
-						onclick="window.location.href = 'tv/?stockInput=${stockNumber}'">
-						<i class="bi bi-tv dropdown-icon small me-2"></i>TV Display</a>
-					</li>
+						<li class="small">
+							<a 
+							href="javascript:void(0);" 
+							type="button"
+							class="dropdown-item pe-5"
+							title="Goto TV Display Launcher"
+							onclick="openTvWorkspaceModal('${stockNumber}')">
+							<i class="bi bi-tv dropdown-icon small me-2"></i>TV Display</a>
+						</li>
 				</ul>
 			</div>
 		</div>
@@ -2420,8 +2428,306 @@ function setupNetworkMonitoring() {
 }
 
 // =============================================
-// TV Grid Selection Functions
+// TV Workspace Functions
 // =============================================
+
+let tvWorkspaceModalInstance = null;
+let tvWorkspaceZoomLevel = 1;
+
+/**
+ * Return TV workspace DOM references.
+ * @returns {object} DOM refs for TV workspace modal.
+ */
+function getTvWorkspaceDom() {
+	return {
+		modal: document.getElementById("tvWorkspaceModal"),
+		layoutOptions: Array.from(
+			document.querySelectorAll("input[name='tvLayoutOption']"),
+		),
+		stockInput: document.getElementById("tvWorkspaceStockInput"),
+		stockHelp: document.getElementById("tvWorkspaceStockHelp"),
+		useSelectedBtn: document.getElementById("tvUseSelectedBtn"),
+		singleOptions: document.getElementById("tvWorkspaceSingleOptions"),
+		themeSelect: document.getElementById("tvWorkspaceThemeSelect"),
+		noteInput: document.getElementById("tvWorkspaceNoteInput"),
+		swatchInput: document.getElementById("tvWorkspaceSwatchInput"),
+		accent1Input: document.getElementById("tvWorkspaceAccent1Input"),
+		accent2Input: document.getElementById("tvWorkspaceAccent2Input"),
+		slideStartInput: document.getElementById("tvWorkspaceSlideStartInput"),
+		slideEndInput: document.getElementById("tvWorkspaceSlideEndInput"),
+		urlOutput: document.getElementById("tvWorkspaceUrlOutput"),
+		previewShell: document.getElementById("tvWorkspacePreviewShell"),
+		previewZoomable: document.getElementById("tvWorkspacePreviewZoomable"),
+		previewFrame: document.getElementById("tvWorkspacePreviewFrame"),
+		previewLoading: document.getElementById("tvWorkspacePreviewLoading"),
+		previewBtn: document.getElementById("tvWorkspacePreviewBtn"),
+		zoomOutBtn: document.getElementById("tvWorkspaceZoomOutBtn"),
+		zoomFitBtn: document.getElementById("tvWorkspaceZoomFitBtn"),
+		zoomInBtn: document.getElementById("tvWorkspaceZoomInBtn"),
+		copyBtn: document.getElementById("tvWorkspaceCopyUrlBtn"),
+		copyFooterBtn: document.getElementById("tvWorkspaceCopyUrlFooterBtn"),
+		openBtn: document.getElementById("tvWorkspaceOpenLinkBtn"),
+	};
+}
+
+/**
+ * Get base preview dimensions from selected layout.
+ * @returns {{width: number, height: number, portrait: boolean}} Base dimensions.
+ */
+function getTvWorkspaceBaseDimensions() {
+	const layout = getTvWorkspaceLayout();
+	const portrait = layout === "portrait";
+	return {
+		width: portrait ? 1080 : 1920,
+		height: portrait ? 1920 : 1080,
+		portrait,
+	};
+}
+
+/**
+ * Sync preview orientation class with current layout.
+ */
+function syncTvWorkspacePreviewOrientation() {
+	const tvDom = getTvWorkspaceDom();
+	if (!tvDom.previewZoomable) return;
+	const { portrait } = getTvWorkspaceBaseDimensions();
+	tvDom.previewZoomable.classList.toggle("tv-workspace-preview-portrait", portrait);
+}
+
+/**
+ * Apply zoom to the TV preview panel.
+ * @param {number} zoom Zoom value.
+ */
+function applyTvWorkspaceZoom(zoom) {
+	const tvDom = getTvWorkspaceDom();
+	if (!tvDom.previewZoomable) return;
+	const { width, height } = getTvWorkspaceBaseDimensions();
+	const clamped = Math.max(0.15, Math.min(1.75, zoom));
+	tvWorkspaceZoomLevel = clamped;
+
+	tvDom.previewZoomable.style.width = `${width}px`;
+	tvDom.previewZoomable.style.height = `${height}px`;
+	if (window.CSS?.supports?.("zoom: 1")) {
+		tvDom.previewZoomable.style.zoom = clamped;
+		tvDom.previewZoomable.style.transform = "";
+	} else {
+		tvDom.previewZoomable.style.zoom = "";
+		tvDom.previewZoomable.style.transform = `scale(${clamped})`;
+	}
+}
+
+/**
+ * Calculate fit-to-panel zoom.
+ * @returns {number} Zoom scale.
+ */
+function getTvWorkspaceFitZoom() {
+	const tvDom = getTvWorkspaceDom();
+	if (!tvDom.previewShell) return 1;
+	const { width, height } = getTvWorkspaceBaseDimensions();
+	const availableWidth = Math.max(200, tvDom.previewShell.clientWidth - 24);
+	const availableHeight = Math.max(200, tvDom.previewShell.clientHeight - 24);
+	const scale = Math.min(availableWidth / width, availableHeight / height);
+	return Math.max(0.15, Math.min(1.75, scale));
+}
+
+/**
+ * Get selected TV layout from modal controls.
+ * @returns {string} Layout value.
+ */
+function getTvWorkspaceLayout() {
+	const selected = document.querySelector(
+		"input[name='tvLayoutOption']:checked",
+	);
+	return selected?.value || "portrait";
+}
+
+/**
+ * Set current layout option in TV workspace.
+ * @param {string} layout Layout value.
+ */
+function setTvWorkspaceLayout(layout) {
+	const option = document.querySelector(
+		`input[name='tvLayoutOption'][value='${layout}']`,
+	);
+	if (option) option.checked = true;
+}
+
+/**
+ * Build a TV display URL from modal values.
+ * @param {boolean} preview Include preview mode flag.
+ * @returns {string} TV display URL.
+ */
+function buildTvWorkspaceUrl(preview = false) {
+	const tvDom = getTvWorkspaceDom();
+	const url = new URL("tv/display/", window.location.href);
+	const layout = getTvWorkspaceLayout();
+	const rawStock = (tvDom.stockInput?.value || "").trim();
+	const theme = tvDom.themeSelect?.value || "dark";
+
+	url.searchParams.set("layout", layout);
+	url.searchParams.set("theme", theme);
+
+	if (layout === "grid") {
+		const stocks = rawStock
+			.split(",")
+			.map((s) => s.trim().toUpperCase())
+			.filter(Boolean)
+			.slice(0, 10);
+		if (stocks.length) {
+			url.searchParams.set("s", stocks.join(","));
+		}
+	} else {
+		const stock = rawStock.split(",")[0]?.trim().toUpperCase() || "";
+		if (stock) {
+			url.searchParams.set("s", stock);
+		}
+		const note = (tvDom.noteInput?.value || "").trim();
+		const swatch = (tvDom.swatchInput?.value || "").trim();
+		const accent1 = (tvDom.accent1Input?.value || "").trim();
+		const accent2 = (tvDom.accent2Input?.value || "").trim();
+		const slideStart = Number.parseInt(tvDom.slideStartInput?.value, 10);
+		const slideEnd = Number.parseInt(tvDom.slideEndInput?.value, 10);
+
+		if (note) url.searchParams.set("note", note);
+		if (swatch) url.searchParams.set("swatch", swatch);
+		if (accent1) url.searchParams.set("accent1", accent1);
+		if (accent2) url.searchParams.set("accent2", accent2);
+		if (Number.isFinite(slideStart)) url.searchParams.set("slideStart", slideStart);
+		if (Number.isFinite(slideEnd)) url.searchParams.set("slideEnd", slideEnd);
+	}
+
+	if (preview) {
+		url.searchParams.set("preview", "1");
+	}
+
+	return url.toString();
+}
+
+/**
+ * Keep the TV workspace controls in sync with layout mode.
+ */
+function updateTvWorkspaceLayoutUi() {
+	const tvDom = getTvWorkspaceDom();
+	const layout = getTvWorkspaceLayout();
+	const isGrid = layout === "grid";
+	if (tvDom.singleOptions) {
+		tvDom.singleOptions.style.display = isGrid ? "none" : "";
+	}
+	if (tvDom.stockHelp) {
+		tvDom.stockHelp.textContent = isGrid
+			? "Enter up to 10 stock numbers, comma-separated."
+			: "Single stock number for portrait/landscape.";
+	}
+	if (tvDom.stockInput) {
+		tvDom.stockInput.placeholder = isGrid
+			? "STOCK1, STOCK2, STOCK3 ..."
+			: "SD21374";
+	}
+	syncTvWorkspacePreviewOrientation();
+}
+
+/**
+ * Update the URL output and optionally refresh preview frame.
+ * @param {boolean} refreshPreview Whether to reload preview iframe.
+ */
+function updateTvWorkspaceUrl(refreshPreview = false) {
+	const tvDom = getTvWorkspaceDom();
+	const normalUrl = buildTvWorkspaceUrl(false);
+	if (tvDom.urlOutput) {
+		tvDom.urlOutput.value = normalUrl;
+	}
+	if (refreshPreview && tvDom.previewFrame) {
+		if (tvDom.previewLoading) {
+			tvDom.previewLoading.classList.remove("hidden");
+		}
+		tvDom.previewFrame.src = buildTvWorkspaceUrl(true);
+	}
+}
+
+/**
+ * Copy TV display URL from workspace.
+ */
+async function copyTvWorkspaceUrl() {
+	const tvDom = getTvWorkspaceDom();
+	const url = tvDom.urlOutput?.value?.trim();
+	if (!url) return;
+	try {
+		await navigator.clipboard.writeText(url);
+	} catch (error) {
+		console.error("Failed to copy TV URL:", error);
+	}
+}
+
+/**
+ * Open TV display URL in a new tab.
+ */
+function openTvWorkspaceLink() {
+	const tvDom = getTvWorkspaceDom();
+	const url = tvDom.urlOutput?.value?.trim() || buildTvWorkspaceUrl(false);
+	if (!url) return;
+	window.open(url, "_blank", "noopener,noreferrer");
+}
+
+/**
+ * Apply selected row stock numbers into TV workspace input.
+ * @returns {string[]} Selected stock numbers.
+ */
+function useSelectedStocksInTvWorkspace() {
+	const tvDom = getTvWorkspaceDom();
+	const selected = getSelectedTvGridItems().slice(0, 10);
+	if (!selected.length) return [];
+	if (tvDom.stockInput) {
+		tvDom.stockInput.value = selected.join(",");
+	}
+	if (selected.length > 1) {
+		setTvWorkspaceLayout("grid");
+	}
+	updateTvWorkspaceLayoutUi();
+	updateTvWorkspaceUrl(true);
+	return selected;
+}
+
+/**
+ * Open TV workspace modal with optional initial stock(s).
+ * @param {string|string[]} [stockInput] Single stock or stock list.
+ */
+function openTvWorkspaceModal(stockInput) {
+	const tvDom = getTvWorkspaceDom();
+	if (!tvDom.modal || !window.bootstrap?.Modal) return;
+	if (!tvWorkspaceModalInstance) {
+		tvWorkspaceModalInstance = new bootstrap.Modal(tvDom.modal);
+	}
+
+	const theme = document.body.getAttribute("data-bs-theme") || "dark";
+	if (tvDom.themeSelect) {
+		tvDom.themeSelect.value = theme === "light" ? "light" : "dark";
+	}
+
+	if (Array.isArray(stockInput)) {
+		if (tvDom.stockInput) {
+			tvDom.stockInput.value = stockInput.slice(0, 10).join(",");
+		}
+		setTvWorkspaceLayout(stockInput.length > 1 ? "grid" : "portrait");
+	} else if (typeof stockInput === "string" && stockInput.trim()) {
+		if (tvDom.stockInput) {
+			tvDom.stockInput.value = stockInput.trim().toUpperCase();
+		}
+		setTvWorkspaceLayout("portrait");
+	} else if (!tvDom.stockInput?.value) {
+		const selected = getSelectedTvGridItems();
+		if (selected.length) {
+			tvDom.stockInput.value = selected.slice(0, 10).join(",");
+			setTvWorkspaceLayout(selected.length > 1 ? "grid" : "portrait");
+		}
+	}
+
+	updateTvWorkspaceLayoutUi();
+	updateTvWorkspaceUrl(true);
+	applyTvWorkspaceZoom(getTvWorkspaceFitZoom());
+	tvWorkspaceModalInstance.show();
+}
+
+window.openTvWorkspaceModal = openTvWorkspaceModal;
 
 /**
  * Get all selected stock numbers for TV Grid.
@@ -2454,16 +2760,113 @@ function updateTvGridButton() {
 function sendToTvGrid() {
 	const selected = getSelectedTvGridItems();
 	if (selected.length === 0) return;
-	
-	// Limit to 10 items
-	const stocks = selected.slice(0, 10).join(",");
-	window.location.href = `tv/?s=${encodeURIComponent(stocks)}&layout=grid`;
+	openTvWorkspaceModal(selected.slice(0, 10));
 }
 
 /**
  * Initialize TV Grid selection handlers.
  */
 function initTvGridSelection() {
+	const tvDom = getTvWorkspaceDom();
+
+	if (tvDom.layoutOptions.length) {
+		tvDom.layoutOptions.forEach((option) => {
+			option.addEventListener("change", () => {
+				updateTvWorkspaceLayoutUi();
+				updateTvWorkspaceUrl(true);
+				applyTvWorkspaceZoom(getTvWorkspaceFitZoom());
+			});
+		});
+	}
+
+	if (tvDom.modal) {
+		tvDom.modal.addEventListener("shown.bs.modal", () => {
+			updateTvWorkspaceLayoutUi();
+			updateTvWorkspaceUrl(true);
+			applyTvWorkspaceZoom(getTvWorkspaceFitZoom());
+		});
+		tvDom.modal.addEventListener("hidden.bs.modal", () => {
+			if (tvDom.previewFrame) {
+				tvDom.previewFrame.src = "";
+			}
+			if (tvDom.previewLoading) {
+				tvDom.previewLoading.classList.add("hidden");
+			}
+		});
+	}
+
+	if (tvDom.previewFrame) {
+		tvDom.previewFrame.addEventListener("load", () => {
+			const currentDom = getTvWorkspaceDom();
+			if (currentDom.previewLoading) {
+				currentDom.previewLoading.classList.add("hidden");
+			}
+		});
+	}
+
+	if (tvDom.stockInput) {
+		tvDom.stockInput.addEventListener("input", () => updateTvWorkspaceUrl(false));
+	}
+	if (tvDom.noteInput) {
+		tvDom.noteInput.addEventListener("input", () => updateTvWorkspaceUrl(false));
+	}
+	if (tvDom.swatchInput) {
+		tvDom.swatchInput.addEventListener("input", () => updateTvWorkspaceUrl(false));
+	}
+	if (tvDom.accent1Input) {
+		tvDom.accent1Input.addEventListener("input", () => updateTvWorkspaceUrl(false));
+	}
+	if (tvDom.accent2Input) {
+		tvDom.accent2Input.addEventListener("input", () => updateTvWorkspaceUrl(false));
+	}
+	if (tvDom.slideStartInput) {
+		tvDom.slideStartInput.addEventListener("input", () => updateTvWorkspaceUrl(false));
+	}
+	if (tvDom.slideEndInput) {
+		tvDom.slideEndInput.addEventListener("input", () => updateTvWorkspaceUrl(false));
+	}
+	if (tvDom.themeSelect) {
+		tvDom.themeSelect.addEventListener("change", () => updateTvWorkspaceUrl(true));
+	}
+	if (tvDom.previewBtn) {
+		tvDom.previewBtn.addEventListener("click", () => {
+			updateTvWorkspaceUrl(true);
+			applyTvWorkspaceZoom(getTvWorkspaceFitZoom());
+		});
+	}
+	if (tvDom.zoomInBtn) {
+		tvDom.zoomInBtn.addEventListener("click", () =>
+			applyTvWorkspaceZoom(tvWorkspaceZoomLevel + 0.1),
+		);
+	}
+	if (tvDom.zoomOutBtn) {
+		tvDom.zoomOutBtn.addEventListener("click", () =>
+			applyTvWorkspaceZoom(tvWorkspaceZoomLevel - 0.1),
+		);
+	}
+	if (tvDom.zoomFitBtn) {
+		tvDom.zoomFitBtn.addEventListener("click", () =>
+			applyTvWorkspaceZoom(getTvWorkspaceFitZoom()),
+		);
+	}
+	if (tvDom.copyBtn) {
+		tvDom.copyBtn.addEventListener("click", copyTvWorkspaceUrl);
+	}
+	if (tvDom.copyFooterBtn) {
+		tvDom.copyFooterBtn.addEventListener("click", copyTvWorkspaceUrl);
+	}
+	if (tvDom.openBtn) {
+		tvDom.openBtn.addEventListener("click", openTvWorkspaceLink);
+	}
+	if (tvDom.useSelectedBtn) {
+		tvDom.useSelectedBtn.addEventListener("click", useSelectedStocksInTvWorkspace);
+	}
+
+	window.addEventListener("resize", () => {
+		if (!tvDom.modal?.classList.contains("show")) return;
+		applyTvWorkspaceZoom(getTvWorkspaceFitZoom());
+	});
+
 	// Select all checkbox
 	const selectAllCheckbox = document.getElementById("selectAllCheckbox");
 	if (selectAllCheckbox) {
@@ -2493,6 +2896,10 @@ function initTvGridSelection() {
 	if (sendBtn) {
 		sendBtn.addEventListener("click", sendToTvGrid);
 	}
+
+	updateTvWorkspaceLayoutUi();
+	updateTvWorkspaceUrl(false);
+	applyTvWorkspaceZoom(getTvWorkspaceFitZoom());
 }
 
 // Initialize TV Grid selection when DOM is ready

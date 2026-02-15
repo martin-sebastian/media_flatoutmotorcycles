@@ -21,6 +21,7 @@ function getLauncherDom() {
     slideEndInput: document.getElementById("slideEndInput"),
     urlOutput: document.getElementById("urlOutput"),
     imageResults: document.getElementById("imageResults"),
+    imagesPanel: document.getElementById("tvImagesPanel"),
     loadImagesBtn: document.getElementById("loadImagesBtn"),
     clearImagesBtn: document.getElementById("clearImagesBtn"),
     buildUrlBtn: document.getElementById("buildUrlBtn"),
@@ -219,12 +220,14 @@ function getItemImages(item) {
  */
 function renderImageChoices(urls) {
   DOM.imageResults.innerHTML = "";
+  DOM.imagesPanel?.classList.remove("has-images");
 
   if (!urls.length) {
     DOM.imageResults.innerHTML = `<div class="col-12"><div class="alert alert-secondary">No images found.</div></div>`;
     return;
   }
 
+  DOM.imagesPanel?.classList.add("has-images");
   DOM.imageResults.innerHTML = urls
     .map(
       (url, index) => `
@@ -388,6 +391,7 @@ async function handleLoadImages() {
  */
 function clearImageSelection() {
   DOM.imageResults.innerHTML = "";
+  DOM.imagesPanel?.classList.remove("has-images");
   selectedHeroUrl = "";
   selectedSlideUrls.clear();
   if (DOM.imageUrlInput) {
