@@ -546,7 +546,7 @@ function buildDisplayData(data, apiData, swatchColor, accentOne, accentTwo) {
   const totalValue = prices ? prices.totalPrice : apiData?.OTDPrice;
   const hasDiscount = Number.isFinite(Number(specialValue)) && Number.isFinite(Number(msrpValue)) && Number(specialValue) < Number(msrpValue);
   const accessoryTotal = apiData?.AccessoryItemsTotal || (prices?.allAccessoriesTotal ?? 0);
-  const financeApr = 8.99;
+  const financeApr = 4.99;
   const downPaymentRate = 0.1;
   const financeTermMonths = 144;
   const totalAmount = Number(totalValue) || Number(specialValue) || 0;
@@ -654,9 +654,9 @@ function renderMiddleDefault(data, displayData, customText) {
         <div class="flex-grow-1"></div>
         <div class="d-flex flex-column align-items-start">
           ${leftPriceMarkup}
-          <div class="d-flex align-items-baseline mt-0 fw-semibold text-danger fs-6">
+          <div class="d-flex align-items-baseline mt-0 mb-0 p-0 fw-semibold text-danger fs-6">
             <span class="me-2">Est. payment</span>
-            <span class="tv-payment-amount fs-3">${formatPrice(monthlyPayment)}/mo</span>
+            <span class="tv-payment-amount fs-4">${formatPrice(monthlyPayment)}/mo</span>
           </div>
         </div>
         <hr class="my-2 opacity-25" />
