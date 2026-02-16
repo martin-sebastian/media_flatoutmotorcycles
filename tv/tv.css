@@ -73,15 +73,68 @@ body.tv-body {
   color: var(--bs-body-color);
 }
 
+/* Animated gradient border/glow effect */
+@keyframes tv-glow-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 /* Shared box styling for all layouts */
 .tv-box {
+  position: relative;
   width: 100%;
   height: 100%;
-  background: rgba(33, 37, 41, 0.9);
+  background: rgba(33, 37, 41, 0.95);
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
+}
+
+/* Animated glowing gradient border */
+.tv-box::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: -2;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(220, 53, 69, 0.8) 15%,
+    rgba(255, 107, 107, 0.9) 25%,
+    rgba(220, 53, 69, 0.8) 35%,
+    transparent 50%,
+    transparent 100%
+  );
+  border-radius: 18px;
+  animation: tv-glow-rotate 8s linear infinite;
+  filter: blur(8px);
+  opacity: 0.8;
+}
+
+/* Inner backdrop to mask the glow but allow overflow content */
+.tv-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  border-radius: 16px;
+  z-index: 0;
+}
+
+/* Ensure content inside .tv-box stays above the pseudo-elements, but don't interfere with absolute positioning */
+.tv-box > :not([style*="position: absolute"]):not(.position-absolute) {
+  position: relative;
+  z-index: 2;
+}
+
+/* Ensure absolutely positioned badges stay on top */
+.tv-box .badge[style*="position: absolute"],
+.tv-box .position-absolute {
+  z-index: 10 !important;
 }
 
 /* List group inside tv-box - dark theme */
@@ -120,9 +173,43 @@ body.tv-body {
 }
 
 .tv-carousel {
+  position: relative;
   overflow: hidden;
   width: 100%;
   margin: 0;
+  border-radius: 16px;
+  z-index: 1;
+}
+
+/* Animated glowing gradient border for carousel */
+.tv-carousel::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(220, 53, 69, 0.8) 15%,
+    rgba(255, 107, 107, 0.9) 25%,
+    rgba(220, 53, 69, 0.8) 35%,
+    transparent 50%,
+    transparent 100%
+  );
+  border-radius: 18px;
+  animation: tv-glow-rotate 8s linear infinite;
+  filter: blur(8px);
+  opacity: 0.8;
+}
+
+.tv-carousel::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  background: transparent;
+  border-radius: 15px;
+  z-index: -1;
+  pointer-events: none;
 }
 
 .tv-carousel,
@@ -584,13 +671,46 @@ body.tv-body {
 }
 
 .tv-video-frame {
+  position: relative;
   overflow: hidden;
   background: #0b0b0b;
-  position: relative;
   width: 100%;
   margin: 0;
   padding: 0;
   height: 100%;
+  border-radius: 16px;
+  z-index: 1;
+}
+
+/* Animated glowing gradient border for video */
+.tv-video-frame::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(220, 53, 69, 0.8) 15%,
+    rgba(255, 107, 107, 0.9) 25%,
+    rgba(220, 53, 69, 0.8) 35%,
+    transparent 50%,
+    transparent 100%
+  );
+  border-radius: 18px;
+  animation: tv-glow-rotate 8s linear infinite;
+  filter: blur(8px);
+  opacity: 0.8;
+}
+
+.tv-video-frame::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  background: transparent;
+  border-radius: 15px;
+  z-index: -1;
+  pointer-events: none;
 }
 
 

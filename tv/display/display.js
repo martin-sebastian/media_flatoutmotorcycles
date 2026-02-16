@@ -628,18 +628,16 @@ function renderMiddleDefault(data, displayData, customText) {
     </ul>`;
 
   return `
+  <div class="badge h5 bg-danger rounded-pill" style="position: absolute; top: 20px; left: 100px; z-index: 1;">${data.stockNumber || "N/A"}</div>
+  <div class="badge h5 bg-primary rounded-pill" style="position: absolute; top: 20px; left: 25px; z-index: 1;">${data.usage || "N/A"}</div>
+  <div class="badge fs-1 fw-black bg-warning text-dark rounded-pill" style="position: absolute; top: 20px; left: 695px; z-index: 1;">${customText ? `<div class="text-black">${customText}</div>` : ""}</div>
+  <div id="qrCode" class="position-absolute" style="top: 580px; left: 25px; z-index: 1;"></div>
     <div class="tv-middle-grid">
       <!-- Left: Show Special + pricing + line items -->
-      <div class="tv-box px-4 py-2 d-flex flex-column overflow-hidden">
+      <div class="card tv-box px-4 py-2 d-flex flex-column overflow-hidden">
         <div>
           <h2 class="text-uppercase text-danger mb-0 h2 fw-black">Boat Show Price</h2>
           <h5 class="text-secondary text-uppercase mb-0 fw-semibold"><span class="d-none badge bg-success p-1 me-2">${data.usage || "N/A"}</span>${data.title || ""}</h5>
-          
-          <div class="badge h5 bg-danger rounded-pill" style="position: absolute; top: 20px; left: 100px; z-index: 1;">${data.stockNumber || "N/A"}</div>
-          <div class="badge h5 bg-primary rounded-pill" style="position: absolute; top: 20px; left: 25px; z-index: 1;">${data.usage || "N/A"}</div>
-          <div class="badge fs-1 fw-black bg-warning text-dark rounded-pill" style="position: absolute; top: 20px; left: 695px; z-index: 1;">3 Year Warranty</div>
-          <div id="qrCode" class="position-absolute" style="top: 580px; left: 25px; z-index: 1;"></div>
-
           ${colorName ? `
             <div class="d-none justify-content-between align-items-start gap-2 mt-2">
               <span class="text-secondary small">${colorName}</span>
@@ -664,10 +662,10 @@ function renderMiddleDefault(data, displayData, customText) {
       </div>
 
       <!-- Right: Features + contact/QR -->
-      <div class="tv-box p-3 d-flex flex-column">
+      <div class="card tv-box p-3 d-flex flex-column">
         <div class="flex-grow-1 overflow-hidden">
           ${standardFeatures ? `<div class="tv-standard-features tv-line-items-scroll text-secondary mb-0">${standardFeatures}</div>` : ""}
-          ${customText ? `<div class="text-secondary mt-2 mb-2">${customText}</div>` : ""}
+          
           ${featureMarkup ? `<div class="mt-2">${featureMarkup}</div>` : ""}
         </div>
         <hr class="my-2 opacity-25" />
@@ -705,7 +703,7 @@ function renderPortrait(data, imageUrl, customText, apiData, preferredImages, sl
 
   setDisplayContent(`
     <div class="tv-layout-portrait mx-auto">
-      <div class="tv-skeleton">
+      <div class="tv-skeleton mx-auto">
         <div class="tv-region-carousel">
           ${carouselMarkup}
         </div>
