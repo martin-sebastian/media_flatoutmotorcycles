@@ -607,15 +607,15 @@ function renderMiddleDefault(data, displayData, customText) {
   
   // Left box: MSRP line (if applicable) + main price
   const leftPriceMarkup = showMsrpCrossed
-    ? `<div class="text-secondary h6 small mb-0 text-decoration-line-through">MSRP ${formatPrice(msrpValue)}</div>
-       <div class="h2 mb-0 fw-bold">${formatPrice(specialValue)}</div>`
-    : `<div class="h2 mb-0 fw-bold">${formatPrice(displayPrice)}</div>`;
+    ? `<div class="text-secondary h6 small mb-0 text-decoration-line-through">MSRP ${formatPrice(msrpValue) || "Price"}</div>
+       <div class="h2 mb-0 fw-black">${formatPrice(specialValue) || "N/A"}</div>`
+    : `<div class="h2 mb-0 fw-bold">${formatPrice(displayPrice) || "N/A"}</div>`;
   
   // Right box: price rows as list items
   const priceListItems = showMsrpCrossed
-    ? `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 text-secondary text-decoration-line-through" style="font-size: 0.95rem;"><span>MSRP</span><span class="ms-2">${formatPrice(msrpValue)}</span></li>
-       <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 fw-semibold" style="font-size: 0.95rem;"><span>Sale Price</span><span class="ms-2">${formatPrice(specialValue)}</span></li>`
-    : `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 fw-semibold" style="font-size: 0.95rem;"><span>Price</span><span class="ms-2">${formatPrice(displayPrice)}</span></li>`;
+    ? `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 text-secondary text-decoration-line-through" style="font-size: 0.95rem;"><span>MSRP</span><span class="ms-2">${formatPrice(msrpValue) || "N/A"}</span></li>
+       <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 fw-semibold" style="font-size: 0.95rem;"><span>Sale Price</span><span class="ms-2">${formatPrice(specialValue) || "N/A"}</span></li>`
+    : `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 fw-semibold" style="font-size: 0.95rem;"><span>Price</span><span class="ms-2">${formatPrice(displayPrice) || "N/A"}</span></li>`;
 
   const lineItemsList = `
     <ul class="list-group list-group-flush tv-line-items-scroll">
@@ -630,14 +630,18 @@ function renderMiddleDefault(data, displayData, customText) {
   return `
     <div class="tv-middle-grid">
       <!-- Left: Show Special + pricing + line items -->
-      <div class="tv-box px-3 py-2 d-flex flex-column overflow-hidden">
+      <div class="tv-box px-4 py-2 d-flex flex-column overflow-hidden">
         <div>
-          <div class="text-uppercase text-danger h1 fw-bold">Show Special</div>
-          <h5 class="text-secondary text-uppercase fw-semibold">${data.title || ""}</h5>
-          <span class="badge bg-danger d-none">${data.usage || "N/A"}</span>
-          <div>${data.stockNumber || "N/A"}</div>
+          <h2 class="text-uppercase text-danger mb-0 h2 fw-black">Boat Show Price</h2>
+          <h5 class="text-secondary text-uppercase mb-0 fw-semibold"><span class="d-none badge bg-success p-1 me-2">${data.usage || "N/A"}</span>${data.title || ""}</h5>
+          
+          <div class="badge h5 bg-danger rounded-pill" style="position: absolute; top: 20px; left: 100px; z-index: 1;">${data.stockNumber || "N/A"}</div>
+          <div class="badge h5 bg-primary rounded-pill" style="position: absolute; top: 20px; left: 25px; z-index: 1;">${data.usage || "N/A"}</div>
+          <div class="badge fs-1 fw-black bg-warning text-dark rounded-pill" style="position: absolute; top: 20px; left: 695px; z-index: 1;">3 Year Warranty</div>
+          <div id="qrCode" class="position-absolute" style="top: 580px; left: 25px; z-index: 1;"></div>
+
           ${colorName ? `
-            <div class="d-flex align-items-center gap-2 mt-2">
+            <div class="d-none justify-content-between align-items-start gap-2 mt-2">
               <span class="text-secondary small">${colorName}</span>
               <div class="d-flex align-items-center gap-2">
                 <span class="tv-color-dot tv-color-dot-lg" style="background-color: ${swatch};"></span>
@@ -648,7 +652,7 @@ function renderMiddleDefault(data, displayData, customText) {
           ` : ""}
         </div>
         <div class="flex-grow-1"></div>
-        <div class="d-flex flex-column align-items-end">
+        <div class="d-flex flex-column align-items-start">
           ${leftPriceMarkup}
           <div class="d-flex align-items-baseline mt-0 fw-semibold text-danger fs-6">
             <span class="me-2">Est. payment</span>
@@ -668,10 +672,10 @@ function renderMiddleDefault(data, displayData, customText) {
         </div>
         <hr class="my-2 opacity-25" />
         <div class="d-flex align-items-center justify-content-around">
-          <div id="qrCode" class="tv-qr"></div>
+          
           <div class="d-flex flex-column justify-content-center align-items-center">
             <img src="${getThemeLogoPath()}" alt="Logo" width="260" height="60" />
-            ${phone ? `<div class="mt-3 h4 fw-semibold text-secondary text-center">${phone}</div>` : ""}
+            ${phone ? `<div class="d-none mt-3 h2 fw-semibold text-secondary text-center">${phone}</div>` : ""}
           </div>
         </div>
       </div>

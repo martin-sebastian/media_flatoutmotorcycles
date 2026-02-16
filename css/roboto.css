@@ -55,7 +55,7 @@
 }
 
 @font-face {
-  font-family: "Roboto Black";
+  font-family: "Roboto";
   src: url("../fonts/Roboto/Roboto-Black.ttf") format("truetype");
   font-weight: 900;
   font-style: normal;
@@ -73,7 +73,8 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: "Roboto Black";
+  font-family: "Roboto";
+  font-weight: 900;
   font-style: normal;
   margin: 0;
   padding: 0;

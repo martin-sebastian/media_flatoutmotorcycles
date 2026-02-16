@@ -6,13 +6,7 @@ const XML_FEED_URL = "https://www.flatoutmotorcycles.com/unitinventory_univ.xml"
 const urlsToCache = [
   "./",
   "./index.html",
-  "./css/bootstrap.css",
-  "./css/bootstrap-icons.css",
   "./css/style.css",
-  "./js/bootstrap.bundle.js",
-  "./js/popper.js",
-  "./js/numeral.min.js",
-  "./js/moment.js",
   "./js/app.js",
   "./img/fom-app-logo-01.svg",
   "./img/favicon-16x16.png",

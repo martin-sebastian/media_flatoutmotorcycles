@@ -1,4 +1,17 @@
-/* global moment */
+// Import Bootstrap CSS and JS
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import * as bootstrap from 'bootstrap';
+
+// Import utilities
+import moment from 'moment';
+import numeral from 'numeral';
+
+// Make bootstrap, moment, and numeral globally available for inline scripts and other modules
+window.bootstrap = bootstrap;
+window.moment = moment;
+window.numeral = numeral;
+
 import { fetchVehiclesFromSupabase } from './vehicleData.js';
 
 // Near the top of the file, add a cache object
