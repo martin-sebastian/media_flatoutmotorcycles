@@ -419,7 +419,7 @@ function renderLineItems(items, bold = false) {
     .filter((item) => safeText(item.Description))
     .map(
       (item) =>
-        `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 lh-sm ${weightClass}" style="font-size: 0.95rem;">
+        `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 lh-sm ${weightClass}" style="font-size: 1rem;">
           <span>${safeText(item.Description)}</span>
           <span class="ms-2">${formatPrice(item.Amount)}</span>
         </li>`
@@ -654,10 +654,11 @@ function renderMiddleDefault(data, displayData, customText) {
           ${leftPriceMarkup}
           <div class="d-flex align-items-baseline mt-0 mb-0 p-0 fw-semibold text-danger fs-6">
             <span class="me-2">Est. payment</span>
-            <span class="tv-payment-amount fs-4">${formatPrice(monthlyPayment)}/mo</span>
+            <span class="tv-payment-amount fs-5">${formatPrice(monthlyPayment)}</span>
+            <span class="me-2">/mo</span>
           </div>
         </div>
-        <hr class="my-2 opacity-25" />
+        <hr class="my-0 opacity-25" />
         ${lineItemsList}
       </div>
 
@@ -758,9 +759,9 @@ function renderLandscapeSingle(data, imageUrl, customText, apiData, preferredIma
 
   // Fees box: list-group with price rows and line items
   const landscapePriceItems = showBothPrices
-    ? `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small text-secondary" style="font-size: 0.95rem;"><span>MSRP</span><span class="ms-2">${formatPrice(msrpValue)}</span></li>
-       <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small" style="font-size: 0.95rem;"><span class="text-secondary">Sale Price</span><span class="ms-2 fw-semibold">${formatPrice(specialValue)}</span></li>`
-    : `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small" style="font-size: 0.95rem;"><span class="text-secondary">Price</span><span class="ms-2 fw-semibold">${formatPrice(specialValue || msrpValue)}</span></li>`;
+    ? `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small text-secondary" style="font-size: 1rem;"><span>MSRP</span><span class="ms-2">${formatPrice(msrpValue)}</span></li>
+       <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small" style="font-size: 1rem;"><span class="text-secondary">Sale Price</span><span class="ms-2 fw-semibold">${formatPrice(specialValue)}</span></li>`
+    : `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small" style="font-size: 1rem;"><span class="text-secondary">Price</span><span class="ms-2 fw-semibold">${formatPrice(specialValue || msrpValue)}</span></li>`;
 
   const landscapeLineItemsList = `
     <ul class="list-group list-group-flush tv-line-items-scroll">

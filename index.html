@@ -841,7 +841,7 @@
           await registration.sync.register('sync-xml-data');
           console.log('Background sync registered');
         } catch (error) {
-          console.error('Error registering background sync:', error);
+          // Silent fail - background sync not supported or permission denied
         }
       }
 
@@ -851,7 +851,6 @@
           const registration = await navigator.serviceWorker.ready;
           // Check if periodic sync is supported
           if (!('periodicSync' in registration)) {
-            console.log('Periodic Sync is not supported by this browser');
             return;
           }
 
@@ -867,14 +866,16 @@
             });
             console.log('Periodic sync registered successfully');
           } else {
-            console.log('Periodic Sync permission not granted');
             // Fall back to regular sync
             await registerBackgroundSync();
           }
         } catch (error) {
-          console.log('Periodic sync registration failed, falling back to regular sync:', error);
-          // Fall back to regular sync
-          await registerBackgroundSync();
+          // Silent fail - fallback to regular sync
+          try {
+            await registerBackgroundSync();
+          } catch (e) {
+            // Silent fail - background sync not available
+          }
         }
       }
 
