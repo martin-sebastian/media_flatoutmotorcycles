@@ -507,6 +507,12 @@ function renderQrCode(url) {
  * @returns {object} PriceCalculator result or null if unavailable.
  */
 function calculatePricesFromApi(apiData, fallbackMsrp = 0) {
+  console.log('🔍 DEBUG calculatePricesFromApi:', {
+    hasPriceCalculator: !!window.PriceCalculator,
+    hasApiData: !!apiData,
+    apiDataKeys: apiData ? Object.keys(apiData).slice(0, 10) : []
+  });
+  
   if (!window.PriceCalculator || !apiData) return null;
   const msrp = Number(apiData.MSRPUnit || apiData.MSRP || apiData.Price || fallbackMsrp) || 0;
   const accessories = (apiData.AccessoryItems || apiData.MUItems || []).map((a) => ({
@@ -517,7 +523,16 @@ function calculatePricesFromApi(apiData, fallbackMsrp = 0) {
   const rebates = apiData.MfgRebatesFrontEnd || apiData.MatItems || [];
   const discounts = apiData.DiscountItems || [];
   const fees = apiData.OTDItems || [];
-  return PriceCalculator.calculate({
+  
+  console.log('🔍 DEBUG PriceCalculator inputs:', {
+    msrp,
+    accessoriesCount: accessories.length,
+    rebatesCount: rebates.length,
+    discountsCount: discounts.length,
+    feesCount: fees.length
+  });
+  
+  const result = PriceCalculator.calculate({
     msrp,
     accessories,
     customAccessories: [],
@@ -526,6 +541,10 @@ function calculatePricesFromApi(apiData, fallbackMsrp = 0) {
     fees,
     tradeIn: 0,
   });
+  
+  console.log('🔍 DEBUG PriceCalculator result:', result);
+  
+  return result;
 }
 
 /**
@@ -540,16 +559,31 @@ function calculatePricesFromApi(apiData, fallbackMsrp = 0) {
 function buildDisplayData(data, apiData, swatchColor, accentOne, accentTwo) {
   const msrpValue = apiData?.Price || apiData?.MSRPUnit || apiData?.MSRP;
   const prices = calculatePricesFromApi(apiData, data?.price);
+  
+  console.log('🔍 DEBUG buildDisplayData:', {
+    msrpValue,
+    prices,
+    dataPrice: data?.price
+  });
+  
   const specialValue = prices
     ? prices.salesPrice
     : apiData?.QuotePrice || apiData?.SalePrice || apiData?.MSRPUnit || apiData?.MSRP || data.price;
+  const subtotalValue = prices ? prices.subtotal : specialValue;
   const totalValue = prices ? prices.totalPrice : apiData?.OTDPrice;
+  
+  console.log('🔍 DEBUG calculated values:', {
+    specialValue,
+    subtotalValue,
+    totalValue
+  });
+  
   const hasDiscount = Number.isFinite(Number(specialValue)) && Number.isFinite(Number(msrpValue)) && Number(specialValue) < Number(msrpValue);
   const accessoryTotal = apiData?.AccessoryItemsTotal || (prices?.allAccessoriesTotal ?? 0);
   const financeApr = 4.99;
   const downPaymentRate = 0.1;
   const financeTermMonths = 144;
-  const totalAmount = Number(totalValue) || Number(specialValue) || 0;
+  const totalAmount = Number(totalValue) || Number(subtotalValue) || Number(specialValue) || 0;
   const downPayment = totalAmount * downPaymentRate;
   const financedAmount = totalAmount - downPayment;
   const monthlyPayment = window.PriceCalculator?.calculatePayment
@@ -578,6 +612,7 @@ function buildDisplayData(data, apiData, swatchColor, accentOne, accentTwo) {
     specialValue,
     msrpValue,
     hasDiscount,
+    subtotalValue,
     totalValue,
     monthlyPayment,
     colorName,
@@ -598,31 +633,33 @@ function buildDisplayData(data, apiData, swatchColor, accentOne, accentTwo) {
  * Render middle content for portrait layout (2 columns: left + right).
  */
 function renderMiddleDefault(data, displayData, customText) {
-  const { specialValue, msrpValue, hasDiscount, totalValue, monthlyPayment, colorName, swatch, accent1, accent2, phone, standardFeatures, featureMarkup, feesMarkup, rebatesMarkup, discountMarkup, accessoryMarkup } = displayData;
+  const { specialValue, msrpValue, hasDiscount, subtotalValue, totalValue, monthlyPayment, colorName, swatch, accent1, accent2, phone, standardFeatures, featureMarkup, feesMarkup, rebatesMarkup, discountMarkup, accessoryMarkup } = displayData;
   
   // Rule: show MSRP crossed out only if New AND MSRP > sale price
   const isNew = (data.usage || "").toLowerCase() === "new";
   const showMsrpCrossed = isNew && hasDiscount && msrpValue;
-  const displayPrice = specialValue || msrpValue;
+  const displayPrice = totalValue || subtotalValue || specialValue || msrpValue;
   
-  // Left box: MSRP line (if applicable) + main price
+  // Left box: MSRP line (if applicable) + main price (using subtotal)
   const leftPriceMarkup = showMsrpCrossed
     ? `<div class="text-secondary h6 small mb-0 text-decoration-line-through">MSRP ${formatPrice(msrpValue) || "Price"}</div>
-       <div class="h2 mb-0 fw-black">${formatPrice(specialValue) || "N/A"}</div>`
-    : `<div class="h2 mb-0 fw-bold">${formatPrice(displayPrice) || "N/A"}</div>`;
+       <div class="h1 mb-0 fw-black">${formatPrice(displayPrice) || "N/A"}</div>`
+    : `<div class="h1 mb-0 fw-black">${formatPrice(displayPrice) || "N/A"}</div>`;
   
-  // Right box: price rows as list items
-  const priceListItems = showMsrpCrossed
-    ? `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 text-secondary text-decoration-line-through" style="font-size: 0.95rem;"><span>MSRP</span><span class="ms-2">${formatPrice(msrpValue) || "N/A"}</span></li>
-       <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 fw-semibold" style="font-size: 0.95rem;"><span>Sale Price</span><span class="ms-2">${formatPrice(specialValue) || "N/A"}</span></li>`
-    : `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 fw-semibold" style="font-size: 0.95rem;"><span>Price</span><span class="ms-2">${formatPrice(displayPrice) || "N/A"}</span></li>`;
+  // Line items: Start with MSRP, show breakdown, then subtotal, then fees, then total
+  const msrpLine = msrpValue
+    ? `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2" style="font-size: 0.95rem;"><span>MSRP</span><span class="ms-2">${formatPrice(msrpValue)}</span></li>`
+    : "";
+  
+  const subtotalLine = `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 fw-semibold border-top" style="font-size: 0.95rem;"><span>Subtotal</span><span class="ms-2">${formatPrice(displayPrice) || "N/A"}</span></li>`;
 
   const lineItemsList = `
     <ul class="list-group list-group-flush tv-line-items-scroll">
-      ${priceListItems}
+      ${msrpLine}
       ${rebatesMarkup}
       ${discountMarkup}
       ${accessoryMarkup}
+      ${subtotalLine}
       ${feesMarkup}
       ${totalValue ? `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 fw-semibold fs-5 text-danger border-top"><span>Total</span><span class="ms-2">${formatPrice(totalValue)}</span></li>` : ""}
     </ul>`;
@@ -630,14 +667,14 @@ function renderMiddleDefault(data, displayData, customText) {
   return `
   <div class="badge h5 bg-danger rounded-pill" style="position: absolute; top: 20px; left: 100px; z-index: 1;">${data.stockNumber || "N/A"}</div>
   <div class="badge h5 bg-primary rounded-pill" style="position: absolute; top: 20px; left: 25px; z-index: 1;">${data.usage || "N/A"}</div>
-  <div class="badge fs-1 fw-black bg-warning text-dark rounded-pill" style="position: absolute; top: 20px; left: 695px; z-index: 1;">${customText ? `<div class="text-black">${customText}</div>` : ""}</div>
+  <div class="badge fs-1 fw-black bg-warning text-dark rounded-pill" style="position: absolute; top: 20px; right: 20px; z-index: 1;">${customText ? `<div class="text-black text-end">${customText}</div>` : ""}</div>
   <div id="qrCode" class="position-absolute" style="top: 580px; left: 25px; z-index: 1;"></div>
     <div class="tv-middle-grid">
       <!-- Left: Show Special + pricing + line items -->
       <div class="card tv-box px-4 py-2 d-flex flex-column overflow-hidden">
         <div>
           <h2 class="text-uppercase text-danger mb-0 h2 fw-black">Boat Show Price</h2>
-          <h5 class="text-secondary text-uppercase mb-0 fw-semibold"><span class="d-none badge bg-success p-1 me-2">${data.usage || "N/A"}</span>${data.title || ""}</h5>
+          <h5 class="d-none text-secondary text-uppercase mb-0 fw-semibold"><span class="d-none badge bg-success p-1 me-2">${data.usage || "N/A"}</span>${data.title || ""}</h5>
           ${colorName ? `
             <div class="d-none justify-content-between align-items-start gap-2 mt-2">
               <span class="text-secondary small">${colorName}</span>
@@ -650,15 +687,15 @@ function renderMiddleDefault(data, displayData, customText) {
           ` : ""}
         </div>
         <div class="flex-grow-1"></div>
-        <div class="d-flex flex-column align-items-start">
+        <div class="card px-4 py-2 d-flex flex-column align-items-center">
           ${leftPriceMarkup}
           <div class="d-flex align-items-baseline mt-0 mb-0 p-0 fw-semibold text-danger fs-6">
-            <span class="me-2">Est. payment</span>
+            <span class="me-2 text-secondary">Est. payment</span>
             <span class="tv-payment-amount fs-5">${formatPrice(monthlyPayment)}</span>
-            <span class="me-2">/mo</span>
+            <span class="me-2 text-secondary">/mo</span>
           </div>
         </div>
-        <hr class="my-0 opacity-25" />
+        <div class="flex-grow-1"></div>
         ${lineItemsList}
       </div>
 
@@ -738,6 +775,7 @@ function renderLandscapeSingle(data, imageUrl, customText, apiData, preferredIma
     specialValue,
     msrpValue,
     hasDiscount,
+    subtotalValue,
     totalValue,
     monthlyPayment,
     colorName,
@@ -757,11 +795,12 @@ function renderLandscapeSingle(data, imageUrl, customText, apiData, preferredIma
   const isNew = (data.usage || "").toLowerCase() === "new";
   const showBothPrices = isNew && hasDiscount;
 
-  // Fees box: list-group with price rows and line items
+  // Fees box: list-group with price rows and line items (using total)
+  const displayPrice = totalValue || subtotalValue || specialValue || msrpValue;
   const landscapePriceItems = showBothPrices
     ? `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small text-secondary" style="font-size: 1rem;"><span>MSRP</span><span class="ms-2">${formatPrice(msrpValue)}</span></li>
-       <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small" style="font-size: 1rem;"><span class="text-secondary">Sale Price</span><span class="ms-2 fw-semibold">${formatPrice(specialValue)}</span></li>`
-    : `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small" style="font-size: 1rem;"><span class="text-secondary">Price</span><span class="ms-2 fw-semibold">${formatPrice(specialValue || msrpValue)}</span></li>`;
+       <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small" style="font-size: 1rem;"><span class="text-secondary">Subtotal</span><span class="ms-2 fw-semibold">${formatPrice(displayPrice)}</span></li>`
+    : `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small" style="font-size: 1rem;"><span class="text-secondary">Subtotal</span><span class="ms-2 fw-semibold">${formatPrice(displayPrice)}</span></li>`;
 
   const landscapeLineItemsList = `
     <ul class="list-group list-group-flush tv-line-items-scroll">
@@ -804,9 +843,9 @@ function renderLandscapeSingle(data, imageUrl, customText, apiData, preferredIma
             <div class="d-flex flex-column align-items-end">
               ${showBothPrices
                 ? `<div class="text-secondary small text-decoration-line-through">MSRP ${formatPrice(msrpValue)}</div>
-                   <div class="display-6 fw-bold text-light">${formatPrice(specialValue)}</div>`
-                : `<div class="text-secondary small">Price</div>
-                   <div class="display-6 fw-bold text-light">${formatPrice(specialValue || msrpValue)}</div>`
+                   <div class="display-6 fw-bold text-light">${formatPrice(displayPrice)}</div>`
+                : `<div class="text-secondary small">Subtotal</div>
+                   <div class="display-6 fw-bold text-light">${formatPrice(displayPrice)}</div>`
               }
               <div class="d-flex align-items-baseline fw-semibold text-danger fs-5">
                 <span class="me-2">Est. payment</span><span class="tv-payment-amount fs-3">${formatPrice(monthlyPayment)}/mo</span>

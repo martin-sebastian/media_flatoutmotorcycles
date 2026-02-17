@@ -47,6 +47,7 @@ const PriceCalculator = {
     // Calculate prices
     const allAccessoriesTotal = accessoriesTotal + customAccessoriesTotal;
     const salesPrice = msrp + discountsTotal + rebatesTotal + allAccessoriesTotal;
+    const subtotal = salesPrice; // Subtotal before fees/taxes
     const totalPrice = salesPrice + feesTotal;
     const totalWithTradeIn = totalPrice - tradeIn;
 
@@ -62,6 +63,7 @@ const PriceCalculator = {
       rebatesTotal,
       feesTotal,
       salesPrice,
+      subtotal,
       totalPrice,
       totalWithTradeIn,
       savings,
