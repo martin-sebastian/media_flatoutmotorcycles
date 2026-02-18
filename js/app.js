@@ -2370,8 +2370,8 @@ function updateTable() {
         ${stockNumber} ${vin} ${usage} ${year} ${manufacturer} ${modelName} ${modelType} ${color} ${updatedDate?.format("YYYY-MM-DD") ?? ""}
         </span>
       </td>
-      <td data-column="type" class="visually-hidden"><span class="column-type text-tooltip" title="${modelType}" data-bs-toggle="tooltip" data-bs-placement="top">${modelType}</span></td>
-      <td class="color-cell visually-hidden" data-column="color"><span class="column-color text-tooltip" title="${color}" data-bs-toggle="tooltip" data-bs-placement="top">${color}</span></td>
+      <td data-column="type" class="hidden"><span class="column-type text-tooltip" title="${modelType}" data-bs-toggle="tooltip" data-bs-placement="top">${modelType}</span></td>
+      <td class="color-cell hidden" data-column="color"><span class="column-color text-tooltip" title="${color}" data-bs-toggle="tooltip" data-bs-placement="top">${color}</span></td>
       <td data-column="price" class="text-center" nowrap>
         <span class="badge text-bg-success fs-6 fw-bold price-badge">${webPrice}</span>
       </td>
