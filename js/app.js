@@ -2199,7 +2199,8 @@ function updateTable() {
       <td class="logo">
 		<div id="${manufacturer}" class="manufacturer-icon-container text-center w-100 d-flex flex-column align-items-center justify-content-center" style="width: 100%; height: 100%">
 			<img 
-				src="icons/${manufacturer ?? "fallback"}.png" 
+				src="./icons/${manufacturer?.toLowerCase()}.png" 
+				onerror="this.onerror=null; this.src='./icons/fallback.png';" 
 				style="width: 28px; height: 24px; object-fit: contain;"
 				alt="${manufacturer}"
 				>
