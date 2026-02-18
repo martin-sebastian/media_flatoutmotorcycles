@@ -1,7 +1,7 @@
 /* global moment */
 import * as bootstrap from 'bootstrap';
 window.bootstrap = bootstrap;
-import { fetchVehiclesFromSupabase } from './vehicleData.js';
+import { fetchVehiclesFromSupabase, fetchTagPresets, fetchVehicleTags, addVehicleTag, removeVehicleTag } from './vehicleData.js';
 
 // Near the top of the file, add a cache object
 const DOM = {
@@ -26,6 +26,7 @@ const DOM = {
 			updated: getActiveFilterElement("updated"),
 			updatedEnd: getActiveFilterElement("updatedEnd"),
 			photos: getActiveFilterElement("photos"),
+			tags: getActiveFilterElement("tags"),
 		};
 	},
 	init() {
@@ -58,6 +59,7 @@ const State = {
 	allItems: [],
 	filteredItems: [],
 	currentItems: [],
+	tagPresets: [],
 	pagination: {
 		currentPage: 1,
 		pageSize: 25,
@@ -72,7 +74,7 @@ const State = {
 	currentKeyTagData: null,
 	saveState() {
 		const filters = {};
-		["search", "year", "manufacturer", "model", "type", "usage", "photos", "updated", "updatedEnd"].forEach((name) => {
+		["search", "year", "manufacturer", "model", "type", "usage", "photos", "updated", "updatedEnd", "tags"].forEach((name) => {
 			const el = getActiveFilterElement(name);
 			if (el) filters[name] = el.value || "";
 		});
@@ -290,7 +292,7 @@ function setFilterGroupState() {
 		});
 }
 
-/** Map manufacturer name to its icon filename in /icons/ */
+/** Map manufacturer name → icon filename (without extension) */
 const MAKE_ICONS = {
 	'bmw': 'bmw', 'can-am': 'can-am', 'harley-davidson®': 'harley-davidson',
 	'honda': 'honda', 'indian motorcycle': 'indian', 'kawasaki': 'kawasaki',
@@ -300,10 +302,127 @@ const MAKE_ICONS = {
 	'vanderhall': 'vanderhall', 'yacht club': 'yacht-club', 'yamaha': 'yamaha',
 	'ski-doo': 'can-am', 'benelli': 'benelli',
 };
-function getMakeIcon(make) {
-	const key = (make || '').toLowerCase();
-	const file = MAKE_ICONS[key];
-	return file ? `<img src="./icons/${file}.png" alt="${make}" width="22px" height="18px" style="opacity:.85" onerror="this.style.display='none'">` : '';
+function getMakeIconFile(make) {
+	return MAKE_ICONS[(make || '').toLowerCase()] || null;
+}
+
+/* ── Tag Editor ─────────────────────────────────────── */
+
+let tagEditorModal = null;
+let tagEditorStock = '';
+
+/** Opens the tag editor modal for a given stock number. */
+function openTagEditor(stockNumber) {
+	tagEditorStock = stockNumber;
+	const item = State.allItems.find(i => i.stockNumber === stockNumber);
+	if (!item) return;
+
+	document.getElementById('tagEditorStock').textContent = stockNumber;
+	document.getElementById('tagEditorVehicleName').textContent = item.title || '';
+
+	renderTagEditorPresets(item.tags || []);
+	document.getElementById('tagEditorCustomInput').value = '';
+
+	if (!tagEditorModal) {
+		tagEditorModal = new bootstrap.Modal(document.getElementById('tagEditorModal'));
+	}
+	tagEditorModal.show();
+}
+
+/** Renders the preset toggle buttons and current custom tags inside the modal. */
+function renderTagEditorPresets(activeTags) {
+	const container = document.getElementById('tagEditorPresets');
+	const presets = State.tagPresets || [];
+	const activeSet = new Set(activeTags);
+
+	let html = '';
+	// Render preset tag buttons
+	for (const p of presets) {
+		const active = activeSet.has(p.name);
+		html += `<button type="button" class="btn btn-sm tag-preset-btn ${active ? `btn-${p.color}` : `btn-outline-${p.color}`}"
+			data-tag="${p.name}" data-active="${active}">${p.name}</button>`;
+	}
+	// Render custom tags (tags not in presets)
+	const presetNames = new Set(presets.map(p => p.name));
+	for (const t of activeTags) {
+		if (presetNames.has(t)) continue;
+		html += `<span class="badge text-bg-secondary d-flex align-items-center gap-1 tag-custom-badge" style="font-size:.8rem">
+			${t} <i class="bi bi-x-circle tag-remove-custom" role="button" data-tag="${t}" style="cursor:pointer"></i>
+		</span>`;
+	}
+	container.innerHTML = html;
+}
+
+/** Refreshes the tag badges in the table row after a change. */
+function refreshRowTags(stockNumber) {
+	const item = State.allItems.find(i => i.stockNumber === stockNumber);
+	if (!item) return;
+	const cell = document.querySelector(`.tag-badges[data-stock="${stockNumber}"]`);
+	if (!cell) return;
+	cell.innerHTML = (item.tags || []).map(t => {
+		const preset = State.tagPresets.find(p => p.name === t);
+		const color = preset ? preset.color : 'secondary';
+		return `<span class="badge text-bg-${color} tag-badge" style="font-size:.65rem">${t}</span>`;
+	}).join('') + `<button type="button" class="btn btn-outline-secondary btn-sm tag-edit-btn border-0 p-0 px-1" title="Edit tags" data-stock="${stockNumber}">
+		<i class="bi bi-plus-circle" style="font-size:.75rem"></i>
+	</button>`;
+}
+
+/** Toggles a tag on/off for the current vehicle and updates UI. */
+async function toggleTag(tag, addIt) {
+	const item = State.allItems.find(i => i.stockNumber === tagEditorStock);
+	if (!item) return;
+
+	if (addIt) {
+		const ok = await addVehicleTag(tagEditorStock, tag);
+		if (ok && !item.tags.includes(tag)) item.tags.push(tag);
+	} else {
+		const ok = await removeVehicleTag(tagEditorStock, tag);
+		if (ok) item.tags = item.tags.filter(t => t !== tag);
+	}
+
+	renderTagEditorPresets(item.tags);
+	refreshRowTags(tagEditorStock);
+}
+
+/** Wires up click handlers for the tag editor modal (delegated). */
+function initTagEditor() {
+	const presetsEl = document.getElementById('tagEditorPresets');
+	if (!presetsEl) return;
+
+	// Preset toggle buttons
+	presetsEl.addEventListener('click', (e) => {
+		const btn = e.target.closest('.tag-preset-btn');
+		if (btn) {
+			const tag = btn.dataset.tag;
+			const isActive = btn.dataset.active === 'true';
+			toggleTag(tag, !isActive);
+			return;
+		}
+		// Custom tag remove
+		const removeIcon = e.target.closest('.tag-remove-custom');
+		if (removeIcon) {
+			toggleTag(removeIcon.dataset.tag, false);
+		}
+	});
+
+	// Custom tag add
+	const addBtn = document.getElementById('tagEditorAddBtn');
+	const input = document.getElementById('tagEditorCustomInput');
+	const addCustom = () => {
+		const val = input.value.trim();
+		if (!val) return;
+		toggleTag(val, true);
+		input.value = '';
+	};
+	addBtn?.addEventListener('click', addCustom);
+	input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addCustom(); } });
+
+	// Delegate click on table tag edit buttons
+	document.getElementById('vehiclesTable')?.addEventListener('click', (e) => {
+		const btn = e.target.closest('.tag-edit-btn');
+		if (btn) openTagEditor(btn.dataset.stock);
+	});
 }
 
 function normalizeDate(dateString) {
@@ -389,6 +508,29 @@ function populateTypeDropdown(types) {
 			option.textContent = type;
 			typeFilter.appendChild(option);
 		});
+	});
+}
+
+/** Populates the Tags filter dropdown from presets + any custom tags in use. */
+function populateTagsDropdown() {
+	const tagFilters = getFilterElementsByName("tags");
+	if (!tagFilters.length) return;
+	const presetNames = (State.tagPresets || []).map(p => p.name);
+	const customTags = new Set();
+	for (const item of State.allItems) {
+		for (const t of item.tags || []) {
+			if (!presetNames.includes(t)) customTags.add(t);
+		}
+	}
+	const allTags = [...presetNames, ...[...customTags].sort()];
+	tagFilters.forEach(sel => {
+		while (sel.options.length > 2) sel.remove(2);
+		for (const tag of allTags) {
+			const opt = document.createElement("option");
+			opt.value = tag;
+			opt.textContent = tag;
+			sel.appendChild(opt);
+		}
 	});
 }
 
@@ -619,6 +761,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 	DOM.init();
 	setFilterGroupState();
 	initializeColumnToggles();
+	initTagEditor();
 
 	// Setup diagnostic monitoring
 	const networkStatus = setupNetworkMonitoring();
@@ -992,11 +1135,18 @@ async function fetchData() {
 
 	if (supabaseCache && supabaseCacheTs && Date.now() - supabaseCacheTs < CACHE_DURATION) {
 		console.log("Using cached Supabase data...");
+		// Always load fresh tag presets and vehicle tags (tiny payloads)
+		const [presets, tagsMap] = await Promise.all([fetchTagPresets(), fetchVehicleTags()]);
+		State.tagPresets = presets;
+		for (const item of supabaseCache) {
+			item.tags = tagsMap.get(item.stockNumber) || [];
+		}
 		await processVehicleData(supabaseCache);
 		return;
 	}
 
 	showPlaceholder();
+	State.tagPresets = await fetchTagPresets();
 	const items = await fetchVehiclesFromSupabase();
 	if (items && items.length > 0) {
 		console.log(`Loaded ${items.length} vehicles from Supabase`);
@@ -1143,6 +1293,7 @@ async function processVehicleData(items) {
 	populateManufacturerDropdown([...manufacturers]);
 	populateYearDropdown([...years]);
 	populateTypeDropdown([...types]);
+	populateTagsDropdown();
 	updateModelDropdownOptions();
 	populateSearchSuggestions(items);
 	populateKeytagStockList(items);
@@ -1285,6 +1436,7 @@ function filterTable() {
 		getActiveFilterElement("usage")?.value.toUpperCase() || "";
 	const photosFilter =
 		getActiveFilterElement("photos")?.value.toUpperCase() || "";
+	const tagsFilter = getActiveFilterElement("tags")?.value || "";
 	const updatedFilter = getActiveFilterElement("updated")?.value || "";
 	const updatedEndFilter = getActiveFilterElement("updatedEnd")?.value || "";
 
@@ -1301,6 +1453,7 @@ function filterTable() {
 		usage: usageFilter,
 		year: yearFilter,
 		photos: photosFilter,
+		tags: tagsFilter,
 		updated: updatedFilter,
 		updatedEnd: updatedEndFilter,
 	};
@@ -1344,6 +1497,10 @@ function filterTable() {
 					if (value === "INHOUSE") return hasInHousePhotos;
 					if (value === "STOCK") return !hasInHousePhotos;
 					return true;
+				}
+				case "tags": {
+					if (!value) return true;
+					return (item.tags || []).includes(value);
 				}
 				case "updated": {
 					// Handle date range filtering; validate moments before comparing
@@ -2196,24 +2353,25 @@ function updateTable() {
       <td class="text-center" nowrap>
         <span class="badge text-bg-dark border">${year}</span>
       </td>
-      <td class="logo">
-		<div id="${manufacturer}" class="manufacturer-icon-container text-center w-100 d-flex flex-column align-items-center justify-content-center" style="width: 100%; height: 100%">
-			<img 
-				src="./icons/${manufacturer?.toLowerCase()}.png" 
-				onerror="this.onerror=null; this.src='./icons/fallback.png';" 
-				style="width: 28px; height: 24px; object-fit: contain;"
-				alt="${manufacturer}"
-				>
-		</div>
+      <td class="logo text-center" nowrap>
+		<img 
+			src="./icons/${getMakeIconFile(manufacturer) || 'fallback'}.png" 
+			onerror="this.onerror=null; this.src='./icons/fallback.png';" 
+			style="width: 28px; height: 24px; object-fit: contain;"
+			alt="${manufacturer}"
+		>
 	</td>
-      <td class="model-cell" nowrap>
-        <span class="model-text fs-6 text-tooltip" title="${title}" data-bs-toggle="tooltip" data-bs-placement="top">${title}</span>
+      <td class="align-middle" nowrap>
+        <h6 class="w-100 model-text h6 mb-0 mt-3 text-tooltip" title="${title}" data-bs-toggle="tooltip" data-bs-placement="top">${title}</h6>
+        <p class="fs-6 small text-muted text-capitalize text-truncate overflow-hidden">
+         ${modelType} ${color}
+        </p>
         <span class="visually-hidden">
         ${stockNumber} ${vin} ${usage} ${year} ${manufacturer} ${modelName} ${modelType} ${color} ${updatedDate?.format("YYYY-MM-DD") ?? ""}
         </span>
       </td>
-      <td data-column="type"><span class="column-type text-tooltip" title="${modelType}" data-bs-toggle="tooltip" data-bs-placement="top">${modelType}</span></td>
-      <td class="color-cell" data-column="color"><span class="column-color text-tooltip" title="${color}" data-bs-toggle="tooltip" data-bs-placement="top">${color}</span></td>
+      <td data-column="type" class="visually-hidden"><span class="column-type text-tooltip" title="${modelType}" data-bs-toggle="tooltip" data-bs-placement="top">${modelType}</span></td>
+      <td class="color-cell visually-hidden" data-column="color"><span class="column-color text-tooltip" title="${color}" data-bs-toggle="tooltip" data-bs-placement="top">${color}</span></td>
       <td data-column="price" class="text-center" nowrap>
         <span class="badge text-bg-success fs-6 fw-bold price-badge">${webPrice}</span>
       </td>
@@ -2237,6 +2395,18 @@ function updateTable() {
         <span class="visually-hidden">${updatedDate?.format("YYYY-MM-DD") ?? "N/A"}</span>
       </td>
 
+      <td data-column="tags" class="text-center tag-cell" nowrap>
+        <div class="d-flex flex-wrap gap-1 justify-content-center align-items-center tag-badges" data-stock="${stockNumber}">
+          ${(item.tags || []).map(t => {
+            const preset = State.tagPresets.find(p => p.name === t);
+            const color = preset ? preset.color : 'secondary';
+            return `<span class="badge text-bg-${color} tag-badge" style="font-size:.65rem">${t}</span>`;
+          }).join('')}
+          <button type="button" class="btn btn-outline-secondary btn-sm tag-edit-btn border-0 p-0 px-1" title="Edit tags" data-stock="${stockNumber}">
+            <i class="bi bi-plus-circle" style="font-size:.75rem"></i>
+          </button>
+        </div>
+      </td>
 
       <td class="text-center nowrap action-cell p-1">
 		<div class="action-button-group btn-group btn-group-sm rounded-5" role="group" aria-label="Button group with nested dropdown">
@@ -2261,8 +2431,9 @@ function updateTable() {
 					<span class="action-button-label px-2 visually-hidden">TV Display</span>
 				</button>
 
-			<div class="btn-group" role="group">
-				<button type="button" class="btn btn-danger dropdown-toggle no-caret" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
+			<div class="btn-group rounded-start" role="group">
+				<button type="button" class="btn btn-danger rounded-end" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
+					<i class="bi bi-chevron-expand"></i>
 				</button>
 				<ul class="dropdown-menu small text-capitalize text-start overflow-hidden dropdown-menu-end">
 

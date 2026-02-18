@@ -134,25 +134,14 @@ body {
 .action-button-group .dropdown-toggle::after {
   border: none;
   /* Removes the default CSS triangle borders */
-  content: "•••";
-  /* Inserts new text/icon */
-  font-size: 1rem;
-  vertical-align: middle;
+
+ 
 }
 .action-button-group.vertical-dots .dropdown-toggle::after {
   border: none;
   /* Removes the default CSS triangle borders */
-  content: "•••";
-  /* Inserts new text/icon */
-  font-size: 0.8rem;
-  vertical-align: middle;
 
-  /* NEW: Required for rotation */
-  display: inline-block;
-  transform: rotate(90deg) !important;
-
-  /* Optional tweak if it looks too close to the left/right */
-    margin-left: 0.25rem;
+ 
 }
 
 .tv-body {

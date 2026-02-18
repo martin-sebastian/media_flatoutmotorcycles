@@ -132,6 +132,10 @@
               <option value="INHOUSE">In-House</option>
               <option value="STOCK">Stock</option>
             </select>
+            <select id="tagsFilterMobile" class="form-select w-100 my-1" data-filter="tags">
+              <option value="">Tags</option>
+              <option value="">All</option>
+            </select>
             <div class="dropdown w-100 my-1">
               <button class="form-select w-100 text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Columns
@@ -164,6 +168,10 @@
                 <div class="form-check">
                   <input class="form-check-input column-toggle" type="checkbox" value="color" id="toggleColorColumnMobile" checked>
                   <label class="form-check-label" for="toggleColorColumnMobile">Color</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input column-toggle" type="checkbox" value="tags" id="toggleTagsColumnMobile" checked>
+                  <label class="form-check-label" for="toggleTagsColumnMobile">Tags</label>
                 </div>
               </div>
             </div>
@@ -270,6 +278,10 @@
                     <option value="INHOUSE">In-House</option>
                     <option value="STOCK">Stock</option>
                   </select>
+                  <select id="tagsFilter" class="form-select form-select-sm" style="max-width: 120px" data-filter="tags">
+                    <option value="">Tags</option>
+                    <option value="">All</option>
+                  </select>
                   <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-1 py-0 ms-0" id="clearFiltersBtn" title="Clear all filters" aria-label="Clear all filters">
                       <i class="bi bi-x-lg"></i>
                     </button>
@@ -318,6 +330,10 @@
                         <input class="form-check-input column-toggle" type="checkbox" value="color" id="toggleColorColumn" checked>
                         <label class="form-check-label" for="toggleColorColumn">Color</label>
                       </div>
+                      <div class="form-check">
+                        <input class="form-check-input column-toggle" type="checkbox" value="tags" id="toggleTagsColumn" checked>
+                        <label class="form-check-label" for="toggleTagsColumn">Tags</label>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -341,6 +357,7 @@
                     <col style="width: 75px" data-column="price">
                     <col style="width: 54px" data-column="photos">
                     <col style="width: 90px" data-column="updated">
+                    <col style="width: 100px" data-column="tags">
                     <col style="width: 200px">
                   </colgroup>
                   <thead class="py-2">
@@ -356,11 +373,12 @@
                       <th class="no-wrap p-2 text-center">Year</th>
                       <th class="no-wrap p-2 text-center">Manuf.</th>
                       <th class="no-wrap p-2">Model</th>
-                      <th class="no-wrap p-2" data-column="type">Type</th>
-                      <th class="no-wrap p-2" data-column="color">Color</th>
+                      <th class="no-wrap p-2 visually-hidden" data-column="type">Type</th>
+                      <th class="no-wrap p-2 visually-hidden" data-column="color">Color</th>
                       <th class="no-wrap p-2 text-center" data-column="price">Web Price</th>
                       <th class="no-wrap p-2 text-center" data-column="photos">Photos</th>
                       <th class="no-wrap p-2 text-center" data-column="updated">Updated</th>
+                      <th class="no-wrap p-2 text-center" data-column="tags" data-no-sort>Tags</th>
                       <th class="no-wrap p-2 text-center" style="cursor: default;" data-no-sort>Create Tags & Quotes</th>
                     </tr>
                   </thead>
@@ -952,6 +970,35 @@
         });
       }
     </script>
+
+    <!-- TAG EDITOR MODAL -->
+    <div class="modal fade" id="tagEditorModal" tabindex="-1" aria-labelledby="tagEditorModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="tagEditorModalLabel">
+              <i class="bi bi-tags me-2"></i>Edit Tags — <span id="tagEditorStock"></span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted small mb-2" id="tagEditorVehicleName"></p>
+            <div id="tagEditorPresets" class="d-flex flex-wrap gap-2 mb-3"></div>
+            <hr>
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control" id="tagEditorCustomInput" placeholder="Add custom tag..." maxlength="30">
+              <button class="btn btn-outline-secondary" type="button" id="tagEditorAddBtn">
+                <i class="bi bi-plus-lg"></i> Add
+              </button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- END TAG EDITOR MODAL -->
 
     <!-- PRINT FRAME -->
     <iframe id="printFrame" frameborder="0" style="display: none"></iframe>
