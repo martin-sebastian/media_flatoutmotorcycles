@@ -1309,8 +1309,57 @@ async function saveQuoteImage(format = "jpeg") {
     }
   }
 }
-// Export for inline onclick handlers
 window.saveQuoteImage = saveQuoteImage;
+
+/** Save quote as PDF via Puppeteer endpoint */
+async function saveQuotePdf() {
+  const dropdown = document.getElementById("saveQuoteDropdown");
+  const btn = dropdown?.querySelector(".dropdown-toggle");
+
+  if (btn) {
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Generating PDF...`;
+    btn.disabled = true;
+  }
+
+  try {
+    const stockNumber = window.vehicleData?.StockNumber || new URLSearchParams(window.location.search).get("search") || "";
+    const state = getQuoteState();
+    const params = new URLSearchParams();
+    params.set("s", stockNumber);
+    if (state.name) params.set("name", state.name);
+    if (state.info) params.set("info", state.info);
+    if (state.hide.length > 0) params.set("hide", state.hide.join(","));
+    if (state.acc) params.set("acc", state.acc);
+    if (state.img) params.set("img", state.img);
+
+    const response = await fetch(`/api/generate-pdf?${params.toString()}`);
+    if (!response.ok) throw new Error("Failed to generate PDF");
+
+    const contentDisposition = response.headers.get("Content-Disposition");
+    let filename = `${stockNumber}-quote.pdf`;
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?([^"]+)"?/);
+      if (match) filename = match[1];
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("PDF save error:", error);
+    alert("Failed to generate PDF. Please try again.");
+  } finally {
+    if (btn) {
+      btn.innerHTML = SAVE_BUTTON_HTML;
+      btn.disabled = false;
+    }
+  }
+}
+window.saveQuotePdf = saveQuotePdf;
 
 /**
  * CREATE EXPORT BUTTON
@@ -1337,6 +1386,10 @@ function createExportButton() {
       <li><hr class="dropdown-divider m-0"></li>
       <li class="p-2"><a class="dropdown-item fs-6 p-2" href="#" onclick="saveQuoteImage('png'); return false;">
         <i class="bi bi-filetype-png me-2"></i> Save quote as png
+      </a></li>
+      <li><hr class="dropdown-divider m-0"></li>
+      <li class="p-2"><a class="dropdown-item fs-6 p-2" href="#" onclick="saveQuotePdf(); return false;">
+        <i class="bi bi-filetype-pdf me-2"></i> Save quote as pdf
       </a></li>
     </ul>
   `;
