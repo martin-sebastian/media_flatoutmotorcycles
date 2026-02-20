@@ -349,7 +349,7 @@
           <!-- TABLE START -->
           <div class="table-scroll-container rounded-3 border border-1 border-secondary-50">
               <div class="table-responsive w-100">
-                <table id="vehiclesTable" class="table table-hover w-100">
+                <table id="vehiclesTable" class="table table-hover">
                   <colgroup>
                     <col style="width: 50px" data-column="select">
                     <col style="width: 85px" data-column="image">
@@ -366,21 +366,20 @@
                   </colgroup>
                   <thead>
                     <tr class="border-bottom">
-                      <th class="no-wrap p-1 align-middle text-center" style="cursor: default;" data-column="select" data-no-sort>
+                      <th class="no-wrap align-middle text-center" style="cursor: default;" data-column="select" data-no-sort>
                           <input type="checkbox" class="form-check-input fs-6" id="selectAllCheckbox" title="Select all">
                       </th>
-                      <th class="no-wrap p-1 text-center" style="cursor: default;" data-column="image" data-no-sort>Image</th>
-                      <th class="no-wrap p-1 text-start" data-column="stock-number">Stock #</th>
-                      <th class="no-wrap p-1 text-center" data-column="usage">Usage</th>
-                      <th class="no-wrap p-1 text-center">Year</th>
-                      <th class="no-wrap p-1 text-center">Brand.</th>
-                      <th class="no-wrap p-1 text-start" data-column="title">Title</th>
-            
-                      <th class="no-wrap p-1 text-center" data-column="price">Web Price</th>
-                      <th class="no-wrap p-1 text-center" data-column="photos">Photos</th>
-                      <th class="no-wrap p-1 text-center" data-column="updated">Updated</th>
-                      <th class="no-wrap p-1 text-start" data-column="tags" data-no-sort>Tags</th>
-                      <th class="no-wrap p-1 text-center" style="cursor: default;" data-no-sort>Create Tags & Quotes</th>
+                      <th class="no-wrap small text-muted text-center" style="cursor: default;" data-column="image" data-no-sort>Image</th>
+                      <th class="no-wrap small text-muted text-center" data-column="usage">Usage</th>
+                      <th class="no-wrap small text-muted text-start" data-column="stock-number">Stock #</th>
+                      <th class="no-wrap small text-muted text-center">Year</th>
+                      <th class="no-wrap small text-muted text-center">Brand</th>
+                      <th class="no-wrap small text-muted text-start" title></th>
+                      <th class="no-wrap small text-muted text-center" data-column="price">Web Price</th>
+                      <th class="no-wrap small text-muted text-center" data-column="photos">Photos</th>
+                      <th class="no-wrap small text-muted text-center" data-column="updated">Updated</th>
+                      <th class="no-wrap small text-muted text-start" data-column="tags" data-no-sort>Tags</th>
+                      <th class="no-wrap small text-muted text-center" style="cursor: default;" data-no-sort>Create Tags & Quotes</th>
                     </tr>
                   </thead>
                   <tbody>

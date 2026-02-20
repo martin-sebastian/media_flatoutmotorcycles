@@ -870,10 +870,10 @@ th {
   border-color: rgba(0, 0, 0, 0.8) transparent transparent;
 }
 
-/* Hide default anchor */
-::backdrop {
-  display: none;
+th {
+  font-size: 0.7rem !important;
 }
+
 
 /* Custom Search Dropdown Styles */
 .search-container {
@@ -935,7 +935,7 @@ th {
 
 /* Stock numbers have a special appearance */
 .suggestion-item[data-type="stockNumbers"] {
-  font-weight: bold;
+  font-weight: light;
 }
 
 /* Make dropdown scrollable on mobile (below lg breakpoint) */

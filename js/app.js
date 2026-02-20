@@ -2351,16 +2351,17 @@ function updateTable() {
         </a>
       </td>
 	  <td nowrap>
-		<div class="input-group input-group-sm flex-nowrap">
-		  <input type="text" class="form-control mx-0 " style="width: 50px;" name="stockNumber" value="${stockNumber}" placeholder="Stock Number" title="${stockNumber}" aria-label="stock number" aria-describedby="btnGroupAddon">
-		  <div class="input-group-text" id="btnGroupAddon">
+		<div class="flex-nowrap d-inline-flex flex-row align-items-center justify-contend-between">
+		  <input type="text" class="form-control" name="stockNumber" value="${stockNumber}" placeholder="Stock Number" title="${stockNumber}" aria-label="stock number"disabled aria-describedby="btnGroupAddon" disabled>
+		  <div class="" id="btnCopyToClipboard">
 			<button type="button" 
 			  class="btn-icon" 
+			  style="margin-left: -25px;"
 			  data-bs-toggle="tooltip"
 			  data-bs-placement="top"
 			  data-bs-title="Copy to clipboard"
 			  onclick="navigator.clipboard.writeText('${stockNumber}')">
-			  <i class="bi bi-clipboard"></i>
+			  <i class="bi bi-clipboard text-secondary"></i>
 			</button>
 		  </div>
 		</div>
@@ -2378,9 +2379,9 @@ function updateTable() {
 		>
 	</td>
       <td class="align-middle" nowrap>
-        <span class="w-100 model-text h6 mb-0 mt-3 text-tooltip" title="${title}" data-bs-toggle="tooltip" data-bs-placement="top">${title}</span>
-        <p class="fs-6 small text-muted text-capitalize text-truncate overflow-hidden">
-         ${modelType} ${color}
+        <span class="model-text text-tooltip" title="${title}">${title}</span>
+        <p class="small text-muted fw-normal text-truncate overflow-hidden">
+         ${modelType} • ${color}
         </p>
         <span class="visually-hidden">
         ${stockNumber} ${vin} ${usage} ${year} ${manufacturer} ${modelName} ${modelType} ${color} ${updatedDate?.format("YYYY-MM-DD") ?? ""}
@@ -2417,24 +2418,24 @@ function updateTable() {
             return `<span class="badge text-bg-${color} tag-badge" style="font-size:.65rem;cursor:pointer" title="Edit tags">${t}</span>`;
           }).join('')}
           <button type="button" class="btn btn-outline-secondary btn-sm tag-edit-btn border-0 p-0 px-1" title="Edit tags" data-stock="${stockNumber}">
-            <i class="bi bi-plus-circle" style="font-size:.75rem"></i>
+            <i class="bi bi-plus-circle" style="font-size:.75rem !important"></i>
           </button>
         </div>
       </td>
 
-      <td class="text-center action-cell p-2" nowrap>
+      <td class="text-center action-cell" nowrap>
 		<div class="action-button-group btn-group btn-group-sm rounded-5" role="group" aria-label="Button group with nested dropdown">
 			<button type="button" id="keytagModalButton" class="btn btn-danger" title="Key Tag" data-bs-toggle="modal" data-bs-target="#keytagModal" data-bs-stocknumber="${stockNumber}">
 				<i class="bi bi-phone rotated-label mx-1"></i>
-				<span class="action-button-label px-2 visually-hidden">KEY TAG</span>
+				<span class="action-button-label visually-hidden">KEY TAG</span>
 			</button>
 			<button type="button" id="hangTagModalButton" class="btn btn-danger px-2" onclick="openHangTagsModal('${stockNumber}')">
 				<i class="bi bi-tags mx-1"></i>
-				<span class="action-button-label px-2 visually-hidden">Hang TAG</span>
+				<span class="action-button-label visually-hidden">Hang TAG</span>
 			</button>
 			<button type="button" id="quotePageButtom" class="btn btn-danger" title="Create Quote Image for texting" onclick="window.location.href = 'quote/?search=${stockNumber}'">
 				<i class="bi bi-card-heading mx-1"></i>
-				<span class="action-button-label px-2 visually-hidden">Quote</span>
+				<span class="action-button-label visually-hidden">Quote</span>
 			</button>
 			<button 
 				type="button"
