@@ -130,6 +130,12 @@
   color: #fff;
 }
 
+.ht-badge-stock {
+  background: #222;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
 .ht-title {
   font-size: 20px;
   font-weight: 900;
@@ -464,7 +470,7 @@
 
 .ht-description-content,
 .ht-features-content {
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.4;
   padding: 8px;
   background: #f9f9f9;
@@ -474,6 +480,21 @@
 /* ===========================================
    FOOTER
    =========================================== */
+
+.ht-footer-outline {
+  border: 2px dashed #999;
+  border-radius: 4px;
+  margin: 10px;
+  min-height: 76px;
+}
+
+.ht-footer-outline:has(.ht-footer:not(.ht-hidden)) {
+  border-color: transparent;
+}
+
+.ht-footer-outline .ht-footer {
+  margin: 0;
+}
 
 .ht-footer {
   background: #ee0000;
@@ -692,6 +713,10 @@
     overflow: hidden !important;
   }
 
+  .ht-footer-outline {
+    border: 2px dashed #999 !important;
+  }
+
   .ht-footer {
     background: #ee0000 !important;
     -webkit-print-color-adjust: exact;
@@ -700,6 +725,12 @@
 
   .ht-badge-usage {
     background: #f0ad4e !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .ht-badge-stock {
+    background: #222 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

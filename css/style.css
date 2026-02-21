@@ -205,18 +205,19 @@ main {
 .bg-white {
   background: #fff;
 }
-.btn-icon {
+.btn-icon.copy-clipboard {
   background: none;
   color: inherit;
   border: none;
-  padding: 0;
+  border-radius: 3px;
+  padding: 1px 4px;
   font: inherit;
   cursor: pointer;
   outline: inherit;
 }
 .input-group input {
   text-align: left;
-  max-width: 75%;
+  max-width: 100%;
 }
 td a img:hover {
   margin: 0px;
@@ -453,7 +454,7 @@ th {
   border-bottom: solid 1px rgba(255, 255, 255, 0.1);
 }
 .table tbody tr:hover {
-  outline: solid 1px rgba(155, 155, 155, 0.4);
+  outline: solid 0px rgba(155, 155, 155, 0.4);
 }
 
 .nowrap {

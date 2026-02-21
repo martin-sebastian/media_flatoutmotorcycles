@@ -97,7 +97,8 @@ const HangTagPartials = {
    * Render badges row.
    * @param {object} options - Badge options.
    */
-  badges: ({ year, usage, metricValue, metricType }) => {
+  badges: ({ stockNumber, year, usage, metricValue, metricType }) => {
+    const stockBadge = stockNumber ? `<span class="ht-badge ht-badge-stock">${stockNumber}</span>` : "";
     const yearBadge = year ? `<span class="ht-badge ht-badge-year">${year}</span>` : "";
     const usageBadge = usage ? `<span class="ht-badge ht-badge-${usage.toLowerCase()}">${usage}</span>` : "";
     let metricBadge = "";
@@ -105,7 +106,7 @@ const HangTagPartials = {
       const label = metricType || "Miles";
       metricBadge = `<span class="ht-badge ht-badge-metric">${Number(metricValue).toLocaleString()} ${label}</span>`;
     }
-    return `<div class="ht-badges">${yearBadge}${usageBadge}${metricBadge}</div>`;
+    return `<div class="ht-badges">${stockBadge}${yearBadge}${usageBadge}${metricBadge}</div>`;
   },
 
   /**
@@ -113,9 +114,8 @@ const HangTagPartials = {
    * @param {string} title - Vehicle title.
    * @param {string} stockNumber - Stock number.
    */
-  titleBlock: (title, stockNumber) => `
+  titleBlock: (title) => `
     <h2 class="ht-title">${title}</h2>
-    <div class="ht-stock-badge">${stockNumber}</div>
   `,
 
   /**
@@ -338,7 +338,7 @@ const HangTagTemplates = {
 
       // Our Price - large font with yellow tag
       const priceHtml = `
-        <h1 class="text-center h1 fw-bolder text-danger mb-1">
+        <h1 class="text-center h1 mb-1" style="font-family:'Roboto',sans-serif;font-weight:900;color:#000;">
           ${HangTagPartials.yellowTag(data.yellowTag)}
           ${formatCurrency(data.ourPrice)}
         </h1>
@@ -346,11 +346,13 @@ const HangTagTemplates = {
 
       // Savings badge - only show if there's savings
       const savingsHtml = hasDiscount 
-        ? `<p class="text-center mb-1" id="savingsLine">
-            <span class="badge bg-success">Savings</span>
-            <span class="text-success fw-bold">➜</span>
-            <span class="text-danger fw-bold fs-5">${formatCurrency(data.savings)}</span>
-          </p>` 
+        ? `<h2 class="text-center h1 mb-1" id="savingsLine">
+        <span class="badge bg-warning p-3">
+            <span class="badge bg-dark me-2">Savings</span>
+            <span class="text-black fw-bold"></span>
+            <span class="text-dark fw-bold fs-5">${formatCurrency(data.savings)}</span>
+        </span>
+          </h2>` 
         : "";
 
       // Expiration line
@@ -400,8 +402,8 @@ const HangTagTemplates = {
           ${HangTagPartials.logo()}
           
           <div class="ht-header">
-            ${HangTagPartials.badges({ year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
-            ${HangTagPartials.titleBlock(title, data.stockNumber)}
+            ${HangTagPartials.badges({ stockNumber: data.stockNumber, year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
+            ${HangTagPartials.titleBlock(title)}
           </div>
           
           <div class="ht-body ht-body-pricing">
@@ -415,7 +417,9 @@ const HangTagTemplates = {
             ${HangTagPartials.qrCode()}
           </div>
           
-          ${HangTagPartials.footer({ price: data.ourPrice, expireDate, yellowTag: data.yellowTag, id: "footerLineLeft" })}
+          <div class="ht-footer-outline">
+            ${HangTagPartials.footer({ price: data.ourPrice, expireDate, yellowTag: data.yellowTag, id: "footerLineLeft" })}
+          </div>
         </div>
       `;
     },
@@ -433,8 +437,8 @@ const HangTagTemplates = {
           ${HangTagPartials.logo()}
           
           <div class="ht-header">
-            ${HangTagPartials.badges({ year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
-            ${HangTagPartials.titleBlock(title, data.stockNumber)}
+            ${HangTagPartials.badges({ stockNumber: data.stockNumber, year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
+            ${HangTagPartials.titleBlock(title)}
           </div>
           
           <div class="ht-body">
@@ -444,7 +448,9 @@ const HangTagTemplates = {
             ${HangTagPartials.barcode()}
           </div>
           
-          ${HangTagPartials.footer({ price: data.ourPrice, expireDate, yellowTag: data.yellowTag, id: "footerLineRight" })}
+          <div class="ht-footer-outline">
+            ${HangTagPartials.footer({ price: data.ourPrice, expireDate, yellowTag: data.yellowTag, id: "footerLineRight" })}
+          </div>
         </div>
       `;
     },
@@ -473,8 +479,8 @@ const HangTagTemplates = {
           
           <div class="ht-header">
             ${HangTagPartials.soldBanner()}
-            ${HangTagPartials.badges({ year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
-            ${HangTagPartials.titleBlock(title, data.stockNumber)}
+            ${HangTagPartials.badges({ stockNumber: data.stockNumber, year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
+            ${HangTagPartials.titleBlock(title)}
           </div>
           
           <div class="ht-body">
@@ -483,7 +489,9 @@ const HangTagTemplates = {
             ${HangTagPartials.barcode(barcodeId)}
           </div>
           
-          ${HangTagPartials.footerSold(priceDisplay)}
+          <div class="ht-footer-outline">
+            ${HangTagPartials.footerSold(priceDisplay)}
+          </div>
         </div>
       `;
 
@@ -524,8 +532,8 @@ const HangTagTemplates = {
           ${HangTagPartials.logo()}
           
           <div class="ht-header">
-            ${HangTagPartials.badges({ year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
-            ${HangTagPartials.titleBlock(title, data.stockNumber)}
+            ${HangTagPartials.badges({ stockNumber: data.stockNumber, year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
+            ${HangTagPartials.titleBlock(title)}
           </div>
           
           <div class="ht-body">
@@ -534,11 +542,13 @@ const HangTagTemplates = {
             ${HangTagPartials.barcode("barcode-left")}
           </div>
           
+          <div class="ht-footer-outline">
           ${priceDisplay ? `
             <div class="ht-footer">
               <div class="ht-footer-price">${priceDisplay}</div>
             </div>
           ` : ""}
+          </div>
         </div>
       `;
     },
@@ -557,8 +567,8 @@ const HangTagTemplates = {
           ${HangTagPartials.logo()}
           
           <div class="ht-header">
-            ${HangTagPartials.badges({ year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
-            ${HangTagPartials.titleBlock(title, data.stockNumber)}
+            ${HangTagPartials.badges({ stockNumber: data.stockNumber, year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
+            ${HangTagPartials.titleBlock(title)}
           </div>
           
           <div class="ht-body">
@@ -567,11 +577,13 @@ const HangTagTemplates = {
             ${HangTagPartials.barcode("barcode-right")}
           </div>
           
+          <div class="ht-footer-outline">
           ${priceDisplay ? `
             <div class="ht-footer">
               <div class="ht-footer-price">${priceDisplay}</div>
             </div>
           ` : ""}
+          </div>
         </div>
       `;
     },
@@ -601,8 +613,8 @@ const HangTagTemplates = {
           ${HangTagPartials.logo()}
           
           <div class="ht-header">
-            ${HangTagPartials.badges({ year })}
-            ${HangTagPartials.titleBlock(title || "Loading...", stockNumber)}
+            ${HangTagPartials.badges({ stockNumber, year })}
+            ${HangTagPartials.titleBlock(title || "Loading...")}
           </div>
           
           <div class="ht-body">
@@ -615,8 +627,10 @@ const HangTagTemplates = {
             </div>
           </div>
           
-          <div class="ht-footer">
-            <div class="ht-footer-price">${priceDisplay}</div>
+          <div class="ht-footer-outline">
+            <div class="ht-footer">
+              <div class="ht-footer-price">${priceDisplay}</div>
+            </div>
           </div>
         </div>
       `;

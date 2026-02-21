@@ -237,6 +237,28 @@ function applyColumnVisibility() {
  * Initialize column visibility toggle handlers.
  */
 function initializeColumnToggles() {
+	const validKeys = new Set(
+		Array.from(document.querySelectorAll(".column-toggle")).map((i) => i.value)
+	);
+	const stored = localStorage.getItem("hiddenColumns");
+	const hidden = stored ? getHiddenColumns() : new Set();
+	const seenKey = "hiddenColumns_seen";
+	const seen = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
+	let dirty = !stored;
+
+	document.querySelectorAll(".column-toggle").forEach((input) => {
+		if (!seen.has(input.value) && !input.hasAttribute("checked")) {
+			hidden.add(input.value);
+			dirty = true;
+		}
+	});
+	localStorage.setItem(seenKey, JSON.stringify([...validKeys]));
+
+	for (const key of hidden) {
+		if (!validKeys.has(key)) { hidden.delete(key); dirty = true; }
+	}
+	if (dirty) saveHiddenColumns(hidden);
+
 	document.querySelectorAll(".column-toggle").forEach((input) => {
 		input.addEventListener("change", () => {
 			const hiddenColumns = getHiddenColumns();
@@ -1040,49 +1062,53 @@ function showPlaceholder(rowCount = 10) {
 		row1.className = "placeholder-wave";
 		row2.className = "placeholder-wave";
 
-		// Set innerHTML once per row
+		// Skeleton cells matched to table columns: select, image, stock#, usage, year, brand, title, type, color, price, photos, updated, tags, actions, days
 		row1.innerHTML = `
-    <td class="placeholder-wave"><span class="placeholder col-6 ms-2"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-4"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-4"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-4"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-4"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-4"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-10"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-6"></span></td>
-    <td class="placeholder-wave">
-		<span class="placeholder col-1"></span>
-		<span class="placeholder col-2"></span>
-		<span class="placeholder col-2"></span>
-		<span class="placeholder col-2"></span>
-		<span class="placeholder col-2"></span>
-	</td>
-    `; // Your placeholder cells
+      <td data-column="select"></td>
+      <td data-column="image" class="placeholder-wave"><span class="placeholder col-8"></span></td>
+      <td data-column="stock-number" class="placeholder-wave"><span class="placeholder col-10"></span></td>
+      <td data-column="usage" class="placeholder-wave"><span class="placeholder col-6"></span></td>
+      <td class="placeholder-wave"><span class="placeholder col-6"></span></td>
+      <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
+      <td class="placeholder-wave"><span class="placeholder col-10"></span></td>
+      <td data-column="type" class="placeholder-wave"><span class="placeholder col-8"></span></td>
+      <td data-column="color" class="placeholder-wave"><span class="placeholder col-8"></span></td>
+      <td data-column="price" class="placeholder-wave"><span class="placeholder col-8"></span></td>
+      <td data-column="photos" class="placeholder-wave"><span class="placeholder col-4"></span></td>
+      <td data-column="updated" class="placeholder-wave"><span class="placeholder col-8"></span></td>
+      <td data-column="tags" class="placeholder-wave"><span class="placeholder col-6"></span></td>
+      <td class="placeholder-wave">
+        <span class="placeholder col-2"></span>
+        <span class="placeholder col-2"></span>
+        <span class="placeholder col-2"></span>
+        <span class="placeholder col-2"></span>
+        <span class="placeholder col-2"></span>
+      </td>
+      <td class="placeholder-wave"><span class="placeholder col-6"></span></td>
+    `;
 		row2.innerHTML = `
-    <td class="placeholder-wave"><span class="placeholder col-8 ms-2"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-10"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-10"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-10"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-10"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-7"></span></td>
-    <td class="placeholder-wave"><span class="placeholder col-9"></span></td>
-    <td class="placeholder-wave">
-		<span class="placeholder col-2"></span>
-		<span class="placeholder col-2"></span>
-		<span class="placeholder col-2"></span>
-		<span class="placeholder col-2"></span>
-		<span class="placeholder col-2"></span>
-	</td>
-    `; // Your placeholder cells
+      <td data-column="select"></td>
+      <td data-column="image" class="placeholder-wave"><span class="placeholder col-6"></span></td>
+      <td data-column="stock-number" class="placeholder-wave"><span class="placeholder col-8"></span></td>
+      <td data-column="usage" class="placeholder-wave"><span class="placeholder col-8"></span></td>
+      <td class="placeholder-wave"><span class="placeholder col-4"></span></td>
+      <td class="placeholder-wave"><span class="placeholder col-6"></span></td>
+      <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
+      <td data-column="type" class="placeholder-wave"><span class="placeholder col-6"></span></td>
+      <td data-column="color" class="placeholder-wave"><span class="placeholder col-10"></span></td>
+      <td data-column="price" class="placeholder-wave"><span class="placeholder col-6"></span></td>
+      <td data-column="photos" class="placeholder-wave"><span class="placeholder col-6"></span></td>
+      <td data-column="updated" class="placeholder-wave"><span class="placeholder col-10"></span></td>
+      <td data-column="tags" class="placeholder-wave"><span class="placeholder col-8"></span></td>
+      <td class="placeholder-wave">
+        <span class="placeholder col-2"></span>
+        <span class="placeholder col-2"></span>
+        <span class="placeholder col-2"></span>
+        <span class="placeholder col-2"></span>
+        <span class="placeholder col-2"></span>
+      </td>
+      <td class="placeholder-wave"><span class="placeholder col-8"></span></td>
+    `;
 
 		fragment.appendChild(row1);
 		fragment.appendChild(row2);
@@ -1438,6 +1464,9 @@ function initializeTableFeatures() {
 		// Set default sort indicator on the updated column (assuming it's the 10th column, index 9)
 		if (header.textContent.trim().toLowerCase().includes("updated")) {
 			header.classList.add("sort-desc");
+			const icon = document.createElement("i");
+			icon.className = "bi bi-arrow-down-short sort-icon";
+			header.appendChild(icon);
 		}
 	});
 
@@ -1573,14 +1602,9 @@ function filterTable() {
 		return searchMatch && filterMatch;
 	});
 
-	// Clear sort when filters change (user can re-sort if needed)
+	// Re-apply active sort after filtering so order stays consistent
 	if (State.sort.column) {
-		State.sort.column = null;
-		State.sort.direction = "asc";
-		// Remove sort indicators from headers
-		document.querySelectorAll("#vehiclesTable th").forEach(th => {
-			th.classList.remove("sort-asc", "sort-desc");
-		});
+		sortFilteredItems();
 	}
 
 	// Reset to first page when filters change
@@ -2016,6 +2040,7 @@ function openServiceCalendarModal() {
 	);
 	serviceCalendarModal.show();
 }
+window.openServiceCalendarModal = openServiceCalendarModal;
 
 function printIframeContent() {
 	const iframe = document.getElementById("hangTagsIframe");
@@ -2024,6 +2049,7 @@ function printIframeContent() {
 		iframe.contentWindow.print();
 	}
 }
+window.printIframeContent = printIframeContent;
 
 
 /**
@@ -2038,16 +2064,17 @@ function sortTableByColumn(header) {
 	
 	// Map column index to data property
 	const columnMap = {
-		2: "stockNumber",   // Stock #
-		3: "usage",         // Usage
-		4: "year",          // Year
-		5: "manufacturer",  // Make
-		6: "modelName",     // Model
-		7: "modelType",     // Type
-		8: "color",         // Color
-		9: "webPrice",      // Web Price
+		2: "stockNumber",    // Stock #
+		3: "usage",          // Usage
+		4: "year",           // Year
+		5: "manufacturer",   // Make
+		6: "modelName",      // Model
+		7: "modelType",      // Type
+		8: "color",          // Color
+		9: "webPrice",       // Web Price
 		10: "imageElements", // Photos (numeric count)
-		11: "updated",      // Updated
+		11: "updated",       // Updated
+		14: "daysInStock",   // Days In
 	};
 	
 	const sortKey = columnMap[columnIndex];
@@ -2061,11 +2088,15 @@ function sortTableByColumn(header) {
 	State.sort.column = sortKey;
 	State.sort.direction = newDirection;
 	
-	// Update header classes
+	// Update header sort icons
 	header.parentElement.querySelectorAll("th").forEach((th) => {
 		th.classList.remove("sort-asc", "sort-desc");
+		th.querySelector(".sort-icon")?.remove();
 	});
 	header.classList.add(newDirection === "asc" ? "sort-asc" : "sort-desc");
+	const icon = document.createElement("i");
+	icon.className = `bi bi-arrow-${newDirection === "asc" ? "up" : "down"}-short sort-icon`;
+	header.appendChild(icon);
 	
 	// Sort the filtered items
 	sortFilteredItems();
@@ -2087,7 +2118,7 @@ function sortFilteredItems() {
 	const multiplier = isAsc ? 1 : -1;
 	
 	// Numeric columns
-	const numericColumns = ["year", "webPrice", "imageElements"];
+	const numericColumns = ["year", "webPrice", "imageElements", "daysInStock"];
 	const isNumeric = numericColumns.includes(column);
 	const isDate = column === "updated";
 	
@@ -2099,7 +2130,6 @@ function sortFilteredItems() {
 		if (isNumeric) {
 			sortKey = parseFloat(String(val).replace(/[^0-9.-]+/g, "")) || 0;
 		} else if (isDate) {
-			// Convert to unix timestamp; use 0 for invalid to avoid NaN breaking sort
 			const momentDate = normalizeDate(val);
 			const ts = momentDate && momentDate.isValid() ? momentDate.valueOf() : 0;
 			sortKey = Number.isFinite(ts) ? ts : 0;
@@ -2107,15 +2137,19 @@ function sortFilteredItems() {
 			sortKey = String(val).toLowerCase();
 		}
 		
-		return { sortKey, item };
+		return { sortKey, tiebreaker: item.stockNumber || "", item };
 	});
 	
-	// Sort by pre-computed keys
+	// Sort by pre-computed keys with stock number tiebreaker for deterministic order
 	items.sort((a, b) => {
+		let cmp;
 		if (typeof a.sortKey === "number" && typeof b.sortKey === "number") {
-			return (a.sortKey - b.sortKey) * multiplier;
+			cmp = (a.sortKey - b.sortKey) * multiplier;
+		} else {
+			cmp = String(a.sortKey).localeCompare(String(b.sortKey)) * multiplier;
 		}
-		return String(a.sortKey).localeCompare(String(b.sortKey)) * multiplier;
+		if (cmp !== 0) return cmp;
+		return a.tiebreaker.localeCompare(b.tiebreaker);
 	});
 	
 	// Update filtered items with sorted order
@@ -2337,8 +2371,11 @@ function updateTable() {
 		const color = item.color;
 		const usage = item.usage;
 		const updated = item.updated;
+		const metricType = item.metricType;
+		const metricValue = item.metricValue;
 		const updatedDate = normalizeDate(updated);
 		const imageElements = item.imageElements;
+		const daysInStock = item.daysInStock != null ? item.daysInStock : '—';
 
 		const row = document.createElement("tr");
 		row.innerHTML = `
@@ -2350,18 +2387,18 @@ function updateTable() {
           ${imageUrl !== "N/A" ? `<img src="${getThumbUrl(imageUrl, 60, 40)}" width="60px" height="40px" alt="${title}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='./img/noimage.png';" />` : `<img src="./img/noimage.png" alt="No image" />`}
         </a>
       </td>
-	  <td nowrap>
+	  <td data-column="stock-number" nowrap>
 		<div class="flex-nowrap d-inline-flex flex-row align-items-center justify-contend-between">
-		  <input type="text" class="form-control" name="stockNumber" value="${stockNumber}" placeholder="Stock Number" title="${stockNumber}" aria-label="stock number"disabled aria-describedby="btnGroupAddon" disabled>
+		  <input type="text" class="form-control form-control-sm fw-light small text-uppercase" name="stockNumber" value="${stockNumber}" placeholder="Stock Number" title="${stockNumber}" aria-label="stock number"disabled aria-describedby="btnGroupAddon" disabled>
 		  <div class="" id="btnCopyToClipboard">
 			<button type="button" 
-			  class="btn-icon" 
-			  style="margin-left: -25px;"
+			  class="btn-icon copy-clipboard btn-sm" 
+			  style="margin-left: 2px;"
 			  data-bs-toggle="tooltip"
 			  data-bs-placement="top"
 			  data-bs-title="Copy to clipboard"
 			  onclick="navigator.clipboard.writeText('${stockNumber}')">
-			  <i class="bi bi-clipboard text-secondary"></i>
+			  <i class="bi bi-clipboard text-secondary fs-5"></i>
 			</button>
 		  </div>
 		</div>
@@ -2378,15 +2415,15 @@ function updateTable() {
 			alt="${manufacturer}"
 		>
 	</td>
-      <td class="align-middle" nowrap>
-        <span class="model-text fw-semibold" title="${title}">${title}</span>
-        <p class="small text-muted fw-normal text-truncate overflow-hidden">
-         ${modelType} • ${color}
-        </p>
+      <td class="align-middle" nowrap style="line-height:1.1">
+        <h6 class="model-text h5 small mb-1 fw-semibold" title="${title}">${title}</h6>
+        <span class="text-muted" style="font-size:.65rem">${[modelType, color, metricValue != null ? `<i class="bi bi-speedometer2"></i> ${metricValue.toLocaleString()} ${metricType || ""}` : ""].filter(v => v && v !== "N/A").join(" &bull; ")}</span>
         <span class="visually-hidden">
         ${stockNumber} ${vin} ${usage} ${year} ${manufacturer} ${modelName} ${modelType} ${color} ${updatedDate?.format("YYYY-MM-DD") ?? ""}
         </span>
       </td>
+      <td data-column="type" class="text-center small" nowrap>${modelType !== "N/A" ? modelType : ""}</td>
+      <td data-column="color" class="text-center small" nowrap>${color !== "N/A" ? color : ""}</td>
 
       <td data-column="price" class="text-center" nowrap>
         <span class="badge text-bg-success fs-6 small fw-bold price-badge"><small>${webPrice}<small></span>
@@ -2424,7 +2461,7 @@ function updateTable() {
       </td>
 
       <td class="text-center action-cell" nowrap>
-		<div class="action-button-group btn-group btn-group-sm rounded-5" role="group" aria-label="Button group with nested dropdown">
+		<div class="action-button-group btn-group btn-pill overflow-hiddern" role="group" aria-label="Button group with nested dropdown">
 			<button type="button" id="keytagModalButton" class="btn btn-danger" title="Key Tag" data-bs-toggle="modal" data-bs-target="#keytagModal" data-bs-stocknumber="${stockNumber}">
 				<i class="bi bi-phone rotated-label mx-1"></i>
 				<span class="action-button-label visually-hidden">KEY TAG</span>
@@ -2493,7 +2530,10 @@ function updateTable() {
 					</li>
 				</ul>
 			</div>    
-      </td>`;
+      </td>
+	 <td class="text-center small">${daysInStock}</td> 
+	 
+	  `;
 
 		fragment.appendChild(row);
 	});

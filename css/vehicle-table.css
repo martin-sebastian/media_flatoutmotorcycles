@@ -24,11 +24,16 @@
     display: none !important;
 }
 
+/* Sort direction arrows on sortable headers */
+#vehiclesTable th:not([data-no-sort]) { cursor: pointer; }
+#vehiclesTable th .sort-icon { font-size: .65rem; opacity: .6; margin-left: 2px; }
+
 /* Constrain thumbnail images to their column */
 #vehiclesTable td[data-column="image"] img {
     width: 100%;
-    max-width: 70px;
-    height: 45px;
+    max-width: 60px;
+    height: 40px;
     object-fit: cover;
+    outline: 1px solid rgba(155,155,155,0.8);
     border-radius: 4px;
 }

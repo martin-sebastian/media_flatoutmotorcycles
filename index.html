@@ -32,6 +32,7 @@
     <title>FOM PRINT</title>
     <link rel="stylesheet" href="./scss/styles.scss" />
     <link rel="stylesheet" href="./css/style.css?v=3" />
+    <link rel="stylesheet" href="./css/vehicle-table.css" />
     <link rel="stylesheet" href="./key-tags/key-tag.css" />
   </head>
 
@@ -52,7 +53,6 @@
               </a>
             </div>
             <div class="navbar-center d-none d-md-block"></div>
-
             <div class="navbar-right toggles-group d-flex flex-row align-items-center">
               <button id="toggleThemeButton" class="btn btn-outline-secondary px-3 mx-1" type="button">
                 <i id="theme-icon" class="bi bi-moon-stars"></i>
@@ -75,7 +75,7 @@
 
 
 
-      <!-- RIGHT SIDE MENU-->
+      <!-- RIGHT SIDE MENU and MOBILE Filters combined-->
       <div
         class="offcanvas offcanvas-end"
         data-bs-scroll="true"
@@ -128,7 +128,7 @@
             </select>
             
             <select id="photosFilterMobile" class="form-select w-100 my-1" data-filter="photos">
-              <option value="">All Photos</option>
+              <option value="">Photos</option>
               <option value="INHOUSE">In-House</option>
               <option value="STOCK">Stock</option>
             </select>
@@ -165,11 +165,11 @@
                   <label class="form-check-label" for="togglePhotosColumnMobile">Photos</label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input column-toggle" type="checkbox" value="type" id="toggleTypeColumnMobile" checked>
+                  <input class="form-check-input column-toggle" type="checkbox" value="type" id="toggleTypeColumnMobile">
                   <label class="form-check-label" for="toggleTypeColumnMobile">Type</label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input column-toggle" type="checkbox" value="color" id="toggleColorColumnMobile" checked>
+                  <input class="form-check-input column-toggle" type="checkbox" value="color" id="toggleColorColumnMobile">
                   <label class="form-check-label" for="toggleColorColumnMobile">Color</label>
                 </div>
                 <div class="form-check">
@@ -197,7 +197,7 @@
                 <button type="button" class="btn btn-dark text-start" title="TV Display" onclick="openTvWorkspaceModal()">
                   <i class="bi bi-tv me-3"></i> TV Display Launcher
                 </button>
-                <button type="button" class="btn btn-dark text-start" title="Create custom quote" onclick="window.location.href = './quote/'">
+                <button type="button" class="btn btn-dark text-start" title="Create custom quote" onclick="window.open('./quote/', '_blank')">
                   <i class="bi bi-card-heading me-3"></i> Create Custom Quote
                 </button>
                 <button type="button" class="btn btn-dark text-start" title="Service Calendar" onclick="openServiceCalendarModal()">
@@ -277,7 +277,7 @@
                     <option value="">All</option>
                   </select>
                   <select id="photosFilter" class="form-select form-select-sm" style="max-width: 130px" data-filter="photos">
-                    <option value="">All Photos</option>
+                    <option value="">Photos</option>
                     <option value="INHOUSE">In-House</option>
                     <option value="STOCK">Stock</option>
                   </select>
@@ -288,9 +288,9 @@
                     <div class="dropdown-menu p-2" id="tagsFilterDropdown" style="min-width: 150px">
                     </div>
                   </div>
-                  <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-1 py-0 ms-0" id="clearFiltersBtn" title="Clear all filters" aria-label="Clear all filters">
-                      <i class="bi bi-x-lg"></i>
-                    </button>
+                  <button type="button" class="btn btn-outline-danger btn-sm px-1 py-0 ms-0" id="clearFiltersBtn" title="Clear all filters" aria-label="Clear all filters">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
                 </div>
                 <div class="w-25 text-center middle-group d-flex align-items-center justify-content-between gap-2">
                   <div class="d-flex flex-row align-items-center justify-content-center ms-4" style="max-width: 260px">
@@ -329,11 +329,11 @@
                         <label class="form-check-label" for="togglePhotosColumn">Photos</label>
                       </div>
                       <div class="form-check">
-                        <input class="form-check-input column-toggle" type="checkbox" value="type" id="toggleTypeColumn" checked>
+                        <input class="form-check-input column-toggle" type="checkbox" value="type" id="toggleTypeColumn">
                         <label class="form-check-label" for="toggleTypeColumn">Type</label>
                       </div>
                       <div class="form-check">
-                        <input class="form-check-input column-toggle" type="checkbox" value="color" id="toggleColorColumn" checked>
+                        <input class="form-check-input column-toggle" type="checkbox" value="color" id="toggleColorColumn">
                         <label class="form-check-label" for="toggleColorColumn">Color</label>
                       </div>
                       <div class="form-check">
@@ -349,7 +349,7 @@
           <!-- TABLE START -->
           <div class="table-scroll-container rounded-3 border border-1 border-secondary-50">
               <div class="table-responsive w-100">
-                <table id="vehiclesTable" class="table table-hover">
+                <table id="vehiclesTable" class="table">
                   <colgroup>
                     <col style="width: 50px" data-column="select">
                     <col style="width: 85px" data-column="image">
@@ -357,12 +357,15 @@
                     <col style="width: 88px" data-column="usage">
                     <col style="width: 80px">
                     <col style="width: 80px">
-                    <col data-column="title">
+                    <col style="min-width: 200px;" data-column="title">
+                    <col style="width: 100px" data-column="type">
+                    <col style="width: 100px" data-column="color">
                     <col style="width: 125px" data-column="price">
                     <col style="width: 100px" data-column="photos">
                     <col style="width: 120px" data-column="updated">
                     <col style="width: 160px" data-column="tags">
                     <col style="width: 250px">
+                    <col style="width: 70px">
                   </colgroup>
                   <thead>
                     <tr class="border-bottom">
@@ -370,16 +373,19 @@
                           <input type="checkbox" class="form-check-input fs-6" id="selectAllCheckbox" title="Select all">
                       </th>
                       <th class="no-wrap small text-muted text-center" style="cursor: default;" data-column="image" data-no-sort>Image</th>
-                      <th class="no-wrap small text-muted text-center" data-column="usage">Usage</th>
                       <th class="no-wrap small text-muted text-start" data-column="stock-number">Stock #</th>
+                      <th class="no-wrap small text-muted text-center" data-column="usage">Usage</th>
                       <th class="no-wrap small text-muted text-center">Year</th>
                       <th class="no-wrap small text-muted text-center">Brand</th>
-                      <th class="no-wrap small text-muted text-start" title></th>
+                      <th class="no-wrap small text-muted text-start">Title</th>
+                      <th class="no-wrap small text-muted text-center" data-column="type">Type</th>
+                      <th class="no-wrap small text-muted text-center" data-column="color">Color</th>
                       <th class="no-wrap small text-muted text-center" data-column="price">Web Price</th>
                       <th class="no-wrap small text-muted text-center" data-column="photos">Photos</th>
                       <th class="no-wrap small text-muted text-center" data-column="updated">Updated</th>
                       <th class="no-wrap small text-muted text-start" data-column="tags" data-no-sort>Tags</th>
                       <th class="no-wrap small text-muted text-center" style="cursor: default;" data-no-sort>Create Tags & Quotes</th>
+                      <th class="no-wrap small text-muted text-center" style="padding-right: 10px;">Days In</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -436,25 +442,6 @@
       </footer>
       <!-- END FOOTER -->
     
-      <div class="modal fade" id="overlayModal" tabindex="-1" aria-labelledby="overlayModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen">
-          <div class="modal-content">
-            <div class="modal-header d-print-none">
-              <h5 class="modal-title" id="overlayModalLabel"><i class="bi bi-tags me-2 icon-circle text-white"></i>QUOTE THIS VEHICLE</h5>
-              <button type="button" class="btn-close btn-primary" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body m-0 p-0 d-print-none" style="background-color: #f0f0f0;">
-              <iframe id="overlayIframe" src="" frameborder="0" style="width: 100%; height: 99%; border: 0; margin: 0; padding: 0;"></iframe>
-            </div>
-            <div class="modal-footer d-print-none">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-danger" onclick="printOverlayIframe()">
-                Print <i class="bi bi-printer"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div class="modal fade" id="keytagModal" tabindex="-1" aria-labelledby="keytagModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -673,7 +660,6 @@
                     </div>
                   </div>
 
-
                   <div>
                     <label for="tvWorkspaceThemeSelect" class="form-label small text-uppercase text-secondary mb-1">Theme</label>
                     <select id="tvWorkspaceThemeSelect" class="form-select">
@@ -715,7 +701,7 @@
                   </div>
 
                   <div class="d-grid gap-2 mt-5">
-                    <button type="button" class="btn btn-success btn-lg mt-5" id="tvWorkspacePreviewBtn">
+                    <button type="button" class="btn btn-success btn-lg flex-1" id="tvWorkspacePreviewBtn">
                       <i class="bi bi-tv me-2"></i>Generate TV Display
                     </button>
                     
@@ -747,34 +733,35 @@
             </div>
           </div>
           <div class="modal-footer border-top border-secondary-subtle justify-content-start">
-                <div class="row g-3 align-items-center flex-nowrap w-100">
-                  
-                    <div class="col-auto">
-                      <label for="tvWorkspaceUrlOutput" class="col-form-label h4 fw-bold mb-0">Your TV Display URL </label>
-                    </div>
-                    <div class="col-auto flex-grow-1 text-end">
-                      <div class="input-group">
-                        <input type="text" id="tvWorkspaceUrlOutput" class="form-control" aria-describedby="passwordHelpInline" readonly>
-                        <button type="button" class="btn btn-danger me24" id="tvWorkspaceCopyUrlFooterBtn">
-                          <i class="bi bi-clipboard-check"></i>
-                        </button>
-                      </div>
-                    </div>
-                    <div class="col-auto">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                    <div class="col-auto">
-                      <button type="button" class="btn btn-danger" id="tvWorkspaceOpenLinkBtn">
-                      <i class="bi bi-box-arrow-up-right me-2"></i>Open in Browser
-                    </button>
-                    </div>
+            <div class="row g-3 align-items-center flex-nowrap w-100">
+              
+              <div class="col-auto">
+                <label for="tvWorkspaceUrlOutput" class="col-form-label h4 fw-bold mb-0">Your TV Display URL </label>
+              </div>
+              <div class="col-auto flex-grow-1 text-end">
+                <div class="input-group">
+                  <input type="text" id="tvWorkspaceUrlOutput" class="form-control" aria-describedby="passwordHelpInline" readonly>
+                  <button type="button" class="btn btn-danger me24" id="tvWorkspaceCopyUrlFooterBtn">
+                    <i class="bi bi-clipboard-check"></i>
+                  </button>
                 </div>
               </div>
+              <div class="col-auto">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+              <div class="col-auto">
+                <button type="button" class="btn btn-danger" id="tvWorkspaceOpenLinkBtn">
+                <i class="bi bi-box-arrow-up-right me-2"></i>Open in Browser
+              </button>
+              </div>
+            </div>
           </div>
-          </div>
+
+        </div>
         </div>
       </div>
     </div>
+  </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./js/numeral.min.js"></script>

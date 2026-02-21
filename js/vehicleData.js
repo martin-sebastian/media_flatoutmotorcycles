@@ -10,12 +10,14 @@ function mapRowToAppItem(row) {
 	const imageUrl = images[0] || 'N/A';
 	const price = row.price != null ? String(row.price) : 'N/A';
 	const year = row.year != null ? String(row.year) : 'N/A';
-	const feedUpdated = row.updated ? new Date(row.updated).getTime() : 0;
-	const syncUpdated = row.updated_at ? new Date(row.updated_at).getTime() : 0;
-	const bestDate = syncUpdated >= feedUpdated && syncUpdated > 0 ? row.updated_at : row.updated;
-	const updated = bestDate
-		? new Date(bestDate).toISOString().replace('T', ' ').slice(0, 19)
+	const updated = row.updated
+		? new Date(row.updated).toISOString().replace('T', ' ').slice(0, 19)
 		: 'N/A';
+
+	const stockedDate = row.stocked_date || null;
+	const daysInStock = stockedDate
+		? Math.max(0, Math.floor((Date.now() - new Date(stockedDate).getTime()) / 86400000))
+		: null;
 
 	return {
 		imageUrl,
@@ -35,6 +37,10 @@ function mapRowToAppItem(row) {
 		updated,
 		imageElements: images.length,
 		tags: [],
+		stockedDate,
+		daysInStock,
+		metricType: row.metric_type || null,
+		metricValue: row.metric_value != null ? Number(row.metric_value) : null,
 	};
 }
 
@@ -106,7 +112,7 @@ export async function fetchVehiclesFromSupabase() {
 	const table = import.meta.env?.VITE_SUPABASE_INVENTORY_TABLE || 'unit_inventory';
 	try {
 		const [vehicleResult, tagsMap] = await Promise.all([
-			supabase.from(table).select('*').order('updated', { ascending: false }),
+			supabase.from(table).select('*').order('updated', { ascending: false }).order('stocknumber', { ascending: true }),
 			fetchVehicleTags(),
 		]);
 
