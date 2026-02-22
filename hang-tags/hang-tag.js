@@ -220,90 +220,97 @@ const HangTagPartials = {
 // ===========================================
 
 /**
- * Normalize portal API data into hang tag format.
- * @param {object} data - Raw API data.
- * @returns {object} Normalized data.
+ * Build unified hang tag data from Supabase baseline, optionally enriched with portal API data.
+ * @param {object} supabaseData - Baseline vehicle data from Supabase (getCachedXmlVehicle shape).
+ * @param {object} [portalData] - Optional portal API response for pricing detail.
+ * @returns {object} Unified hang tag data.
  */
-function normalizeHangTagData(data) {
-  const msrp = data.MSRPUnit || data.MSRP || 0;
-  const accessoryTotal = data.AccessoryItemsTotal || 0;
-  const matTotal = data.MatItemsTotal || 0;
-  const discountTotal = data.DiscountItemsTotal || 0;
-  const tradeInTotal = data.TradeInItemsTotal || 0;
-  
+function normalizeHangTagData(supabaseData, portalData) {
+  const sb = supabaseData || {};
+  const basePrice = parseFloat(sb.Price || sb.MSRP) || 0;
+
+  const base = {
+    stockNumber: sb.StockNumber || "",
+    vin: sb.VIN || "",
+    modelYear: sb.ModelYear || "",
+    manufacturer: sb.Manufacturer || "",
+    modelName: sb.ModelName || "",
+    modelCode: sb.ModelCode || "",
+    color: sb.Color || "",
+    usage: sb.Usage || "",
+    metricType: sb.B50MetricType || sb.MetricType || "",
+    metricValue: sb.B50MetricValue || sb.MetricValue || "",
+    imageUrl: sb.ImageUrl || "",
+    description: sb.Description || sb.B50Desc || "",
+    detailUrl: "",
+    standardFeatures: "",
+    disclaimer: "",
+    ourPrice: basePrice,
+    msrp: basePrice,
+    msrpUnit: basePrice,
+    msrpTitle: "MSRP",
+    msrpPlusAccessories: basePrice,
+    savings: 0,
+    quotePrice: 0,
+    salePrice: basePrice,
+    otdPrice: 0,
+    salePriceExpireDate: "",
+    floorExpireDate: "",
+    estimatedArrival: "",
+    expirationDate: "",
+    lot: "",
+    unitStatus: "",
+    quoteLevel: "",
+    yellowTag: false,
+    accessoryItems: [],
+    matItems: [],
+    discountItems: [],
+    tradeInItems: [],
+    otdItems: [],
+  };
+
+  if (!portalData || !portalData.StockNumber) return base;
+
+  const p = portalData;
+  const msrp = p.MSRPUnit || p.MSRP || base.msrp;
+  const accessoryTotal = p.AccessoryItemsTotal || 0;
+  const matTotal = p.MatItemsTotal || 0;
+  const discountTotal = p.DiscountItemsTotal || 0;
+  const tradeInTotal = p.TradeInItemsTotal || 0;
+
   return {
-    // Basic info
-    stockNumber: data.StockNumber || "",
-    vin: data.VIN || "",
-    modelYear: data.ModelYear || "",
-    manufacturer: data.Manufacturer || "",
-    modelName: data.B50ModelName || data.ModelName || "",
-    modelCode: data.ModelCode || "",
-    color: data.Color || "",
-    usage: data.Usage || "",
-    
-    // Metrics
-    metricType: data.B50MetricType || "",
-    metricValue: data.B50MetricValue || "",
-    
-    // Pricing
-    msrp: msrp,
-    msrpUnit: data.MSRPUnit || msrp,
-    msrpTitle: data.MSRPTitle || "MSRP",
+    ...base,
+    modelName: p.B50ModelName || p.ModelName || base.modelName,
+    modelCode: p.ModelCode || base.modelCode,
+    metricType: p.B50MetricType || base.metricType,
+    metricValue: p.B50MetricValue || base.metricValue,
+    imageUrl: p.ImageUrl || base.imageUrl,
+    description: p.B50Desc || base.description,
+    detailUrl: p.DetailUrl || "",
+    standardFeatures: p.StandardFeatures || "",
+    disclaimer: p.Disclaimer || "",
+    msrp,
+    msrpUnit: p.MSRPUnit || msrp,
+    msrpTitle: p.MSRPTitle || "MSRP",
     msrpPlusAccessories: msrp + accessoryTotal,
     ourPrice: msrp + accessoryTotal + matTotal + discountTotal + tradeInTotal,
     savings: (discountTotal + matTotal + tradeInTotal) * -1,
-    quotePrice: data.QuotePrice || 0,
-    salePrice: data.Price || 0,
-    otdPrice: data.OTDPrice || 0,
-    
-    // Dates
-    salePriceExpireDate: data.SalePriceExpireDate || "",
-    floorExpireDate: data.FloorExpireDate || "",
-    estimatedArrival: data.EstimatedArrival || "",
-    expirationDate: data.ExpirationDate || "",
-    
-    // Content
-    imageUrl: data.ImageUrl || "",
-    detailUrl: data.DetailUrl || "",
-    description: data.B50Desc || "",
-    standardFeatures: data.StandardFeatures || "",
-    disclaimer: data.Disclaimer || "",
-    
-    // Status
-    lot: data.Lot || "",
-    unitStatus: data.UnitStatus || "",
-    quoteLevel: data.QuoteLevel || "",
-    yellowTag: data.YellowTag || false,
-    
-    // Item lists
-    accessoryItems: data.AccessoryItems || [],
-    matItems: data.MatItems || [],
-    discountItems: data.DiscountItems || [],
-    tradeInItems: data.TradeInItems || [],
-    otdItems: data.OTDItems || [],
-  };
-}
-
-/**
- * Normalize XML cache data into hang tag format.
- * @param {object} xmlData - Raw XML data.
- * @returns {object} Normalized data.
- */
-function normalizeXmlData(xmlData) {
-  return {
-    stockNumber: xmlData.StockNumber || "",
-    vin: xmlData.VIN || "",
-    modelYear: xmlData.ModelYear || "",
-    manufacturer: xmlData.Manufacturer || "",
-    modelName: xmlData.ModelName || "",
-    usage: xmlData.Usage || "",
-    metricType: xmlData.B50MetricType || xmlData.MetricType || "",
-    metricValue: xmlData.B50MetricValue || xmlData.MetricValue || "",
-    imageUrl: xmlData.ImageUrl || "",
-    description: xmlData.Description || xmlData.B50Desc || "",
-    price: xmlData.Price || xmlData.MSRP || "",
-    color: xmlData.Color || "",
+    quotePrice: p.QuotePrice || 0,
+    salePrice: p.Price || base.salePrice,
+    otdPrice: p.OTDPrice || 0,
+    salePriceExpireDate: p.SalePriceExpireDate || "",
+    floorExpireDate: p.FloorExpireDate || "",
+    estimatedArrival: p.EstimatedArrival || "",
+    expirationDate: p.ExpirationDate || "",
+    lot: p.Lot || "",
+    unitStatus: p.UnitStatus || "",
+    quoteLevel: p.QuoteLevel || "",
+    yellowTag: p.YellowTag || false,
+    accessoryItems: p.AccessoryItems || [],
+    matItems: p.MatItems || [],
+    discountItems: p.DiscountItems || [],
+    tradeInItems: p.TradeInItems || [],
+    otdItems: p.OTDItems || [],
   };
 }
 
@@ -333,12 +340,12 @@ const HangTagTemplates = {
 
       // MSRP - only show if there's a discount (crossed out)
       const msrpHtml = hasDiscount 
-        ? `<p class="text-center text-secondary fw-semibold mb-0" id="msrpLine">MSRP: <span class="text-decoration-line-through">${formatCurrency(data.msrpPlusAccessories)}</span></p>`
+        ? `<p class="text-center text-secondary fw-bold mb-0" id="msrpLine">MSRP: <span class="text-decoration-line-through">${formatCurrency(data.msrpPlusAccessories)}</span></p>`
         : "";
 
       // Our Price - large font with yellow tag
       const priceHtml = `
-        <h1 class="text-center h1 mb-1" style="font-family:'Roboto',sans-serif;font-weight:900;color:#000;">
+        <h1 class="ht-our-price text-center text-black h1 fw-900 mb-1">
           ${HangTagPartials.yellowTag(data.yellowTag)}
           ${formatCurrency(data.ourPrice)}
         </h1>
@@ -355,36 +362,21 @@ const HangTagTemplates = {
           </h2>` 
         : "";
 
-      // Expiration line
-      const expiresHtml = `<p class="text-center text-muted small mb-2">Sale Program Ends: ${expireDate}</p>`;
+      // Expiration line - only show when we have a date from portal
+      const expiresHtml = data.salePriceExpireDate
+        ? `<p class="text-center text-muted small mb-2">Sale Program Ends: ${expireDate}</p>`
+        : "";
 
-      // Build combined line items list
+      // Build combined line items list (only when portal data provides breakdowns)
       let lineItems = [];
-      
-      // Unit Price (MSRP)
-      lineItems.push({ Description: "Unit Price", Amount: data.msrpUnit });
-      
-      // Discounts
-      if (data.discountItems && data.discountItems.length > 0) {
-        lineItems = lineItems.concat(data.discountItems);
-      }
-      
-      // MAT/Rebates  
-      if (data.matItems && data.matItems.length > 0) {
-        lineItems = lineItems.concat(data.matItems);
-      }
-      
-      // Accessories
-      if (data.accessoryItems && data.accessoryItems.length > 0) {
-        lineItems = lineItems.concat(data.accessoryItems);
-      }
-      
-      // OTD Items (fees, taxes)
-      if (data.otdItems && data.otdItems.length > 0) {
-        lineItems = lineItems.concat(data.otdItems);
+      const hasPortalPricing = data.discountItems.length || data.matItems.length
+        || data.accessoryItems.length || data.otdItems.length;
+
+      if (hasPortalPricing) {
+        lineItems.push({ Description: "Unit Price", Amount: data.msrpUnit });
+        lineItems = lineItems.concat(data.discountItems, data.matItems, data.accessoryItems, data.otdItems);
       }
 
-      // Generate line items as Bootstrap list group
       const lineItemsHtml = lineItems.length > 0
         ? `<ul class="list-group list-group-flush small">
             ${lineItems.map(item => `
@@ -418,7 +410,10 @@ const HangTagTemplates = {
           </div>
           
           <div class="ht-footer-outline">
-            ${HangTagPartials.footer({ price: data.ourPrice, expireDate, yellowTag: data.yellowTag, id: "footerLineLeft" })}
+          ${data.salePriceExpireDate
+            ? HangTagPartials.footer({ price: data.ourPrice, expireDate, yellowTag: data.yellowTag, id: "footerLineLeft" })
+            : `<div class="ht-footer" id="footerLineLeft"><div class="ht-footer-price">${data.ourPrice ? formatCurrency(data.ourPrice) : ""}</div></div>`
+          }
           </div>
         </div>
       `;
@@ -449,7 +444,10 @@ const HangTagTemplates = {
           </div>
           
           <div class="ht-footer-outline">
-            ${HangTagPartials.footer({ price: data.ourPrice, expireDate, yellowTag: data.yellowTag, id: "footerLineRight" })}
+          ${data.salePriceExpireDate
+            ? HangTagPartials.footer({ price: data.ourPrice, expireDate, yellowTag: data.yellowTag, id: "footerLineRight" })
+            : `<div class="ht-footer" id="footerLineRight"><div class="ht-footer-price">${data.ourPrice ? formatCurrency(data.ourPrice) : ""}</div></div>`
+          }
           </div>
         </div>
       `;
@@ -463,14 +461,13 @@ const HangTagTemplates = {
     name: "Sold",
     description: "SOLD banner with strikethrough price for units awaiting pickup",
     
-    renderLeft: (xmlData, container) => {
+    renderLeft: (data, container) => {
       const el = typeof container === "string" ? document.querySelector(container) : container;
       if (!el) return;
 
-      const data = normalizeXmlData(xmlData);
       const title = `${data.manufacturer} ${data.modelName}`.trim();
-      const priceDisplay = data.price ? formatCurrency(parseFloat(data.price) || 0) : "";
-      const barcodeId = `barcode-left-${data.stockNumber.replace(/[^a-zA-Z0-9]/g, '')}`;
+      const priceDisplay = data.ourPrice ? formatCurrency(data.ourPrice) : "";
+      const barcodeId = `barcode-left-${(data.stockNumber || "").replace(/[^a-zA-Z0-9]/g, '')}`;
 
       el.innerHTML = `
         <div class="ht-print-tag ht-sold">
@@ -495,97 +492,14 @@ const HangTagTemplates = {
         </div>
       `;
 
-      // Initialize barcode
       if (data.vin && typeof JsBarcode !== "undefined") {
-        try {
-          JsBarcode(`#${barcodeId}`, data.vin, { height: 40 });
-        } catch (e) {
-          console.warn("Barcode init failed:", e);
-        }
+        try { JsBarcode(`#${barcodeId}`, data.vin, { height: 40 }); }
+        catch (e) { console.warn("Barcode init failed:", e); }
       }
     },
 
-    renderRight: (xmlData, container) => {
-      // Same as left for sold template
-      HangTagTemplates.sold.renderLeft(xmlData, container);
-    },
-  },
-
-  /**
-   * Simple template - works with XML cache data only.
-   */
-  simple: {
-    name: "Simple",
-    description: "Basic hang tag using XML cache data (no detailed pricing)",
-    
-    renderLeft: (xmlData, container) => {
-      const el = typeof container === "string" ? document.querySelector(container) : container;
-      if (!el) return;
-
-      const data = normalizeXmlData(xmlData);
-      const title = `${data.manufacturer} ${data.modelName}`.trim();
-      const priceDisplay = data.price ? formatCurrency(parseFloat(data.price) || 0) : "";
-
-      el.innerHTML = `
-        <div class="ht-print-tag">
-          ${HangTagPartials.hole()}
-          ${HangTagPartials.logo()}
-          
-          <div class="ht-header">
-            ${HangTagPartials.badges({ stockNumber: data.stockNumber, year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
-            ${HangTagPartials.titleBlock(title)}
-          </div>
-          
-          <div class="ht-body">
-            ${HangTagPartials.image(data.imageUrl, title)}
-            ${HangTagPartials.description(data.description, "Description")}
-            ${HangTagPartials.barcode("barcode-left")}
-          </div>
-          
-          <div class="ht-footer-outline">
-          ${priceDisplay ? `
-            <div class="ht-footer">
-              <div class="ht-footer-price">${priceDisplay}</div>
-            </div>
-          ` : ""}
-          </div>
-        </div>
-      `;
-    },
-
-    renderRight: (xmlData, container) => {
-      const el = typeof container === "string" ? document.querySelector(container) : container;
-      if (!el) return;
-
-      const data = normalizeXmlData(xmlData);
-      const title = `${data.manufacturer} ${data.modelName}`.trim();
-      const priceDisplay = data.price ? formatCurrency(parseFloat(data.price) || 0) : "";
-
-      el.innerHTML = `
-        <div class="ht-print-tag">
-          ${HangTagPartials.hole()}
-          ${HangTagPartials.logo()}
-          
-          <div class="ht-header">
-            ${HangTagPartials.badges({ stockNumber: data.stockNumber, year: data.modelYear, usage: data.usage, metricValue: data.metricValue, metricType: data.metricType })}
-            ${HangTagPartials.titleBlock(title)}
-          </div>
-          
-          <div class="ht-body">
-            ${HangTagPartials.image(data.imageUrl, title)}
-            ${HangTagPartials.description(data.description, "Specifications")}
-            ${HangTagPartials.barcode("barcode-right")}
-          </div>
-          
-          <div class="ht-footer-outline">
-          ${priceDisplay ? `
-            <div class="ht-footer">
-              <div class="ht-footer-price">${priceDisplay}</div>
-            </div>
-          ` : ""}
-          </div>
-        </div>
-      `;
+    renderRight: (data, container) => {
+      HangTagTemplates.sold.renderLeft(data, container);
     },
   },
 
@@ -721,12 +635,11 @@ function initHangTagBarcode(vin, selector = "#barcode") {
 }
 
 /**
- * Fetch hang tag data from portal API.
- * Uses the public API endpoint (CORS enabled).
+ * Fetch raw portal API data for a stock number.
  * @param {string} stockNumber - Stock number to fetch.
- * @returns {Promise<object>} Normalized hang tag data.
+ * @returns {Promise<object|null>} Raw portal response, or null.
  */
-async function fetchHangTagData(stockNumber) {
+async function fetchPortalData(stockNumber) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -737,22 +650,15 @@ async function fetchHangTagData(stockNumber) {
     );
     clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      throw new Error(`API returned ${response.status}`);
-    }
+    if (!response.ok) return null;
     const data = await response.json();
-    console.log("Portal API response for", stockNumber, ":", data);
-
-    if (data && data.StockNumber) {
-      return normalizeHangTagData(data);
-    }
-    return null;
+    return (data && data.StockNumber) ? data : null;
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === "AbortError") {
-      throw new Error("Request timed out. Please check your connection and try again.");
+      console.warn("Portal API timed out for:", stockNumber);
     }
-    throw error;
+    return null;
   }
 }
 
@@ -774,6 +680,7 @@ function renderHangTags(templateName, data, leftContainer = ".tag-left", rightCo
     template.renderLeft(data, leftContainer);
     template.renderRight(data, rightContainer);
     console.log(`Template ${templateName} rendered successfully`);
+    window.dispatchEvent(new CustomEvent("hangTagsRendered"));
   } catch (error) {
     console.error(`Error rendering template ${templateName}:`, error);
   }
@@ -781,7 +688,7 @@ function renderHangTags(templateName, data, leftContainer = ".tag-left", rightCo
 
 /**
  * Load and render hang tags for a stock number.
- * Uses XML cache as primary data source, with portal API as enhancement.
+ * Supabase provides the reliable baseline; portal API enriches with pricing detail.
  * @param {string} stockNumber - Stock number to load.
  */
 async function loadHangTags(stockNumber) {
@@ -791,54 +698,38 @@ async function loadHangTags(stockNumber) {
     return;
   }
 
-  let xmlData = null;
+  let supabaseData = null;
 
-  // Load from XML cache (primary data source)
+  // 1. Fetch baseline from Supabase (reliable, fast)
   try {
     if (typeof window.getCachedXmlVehicle === "function") {
-      console.log("Fetching XML cache for:", stockNumber);
-      xmlData = await window.getCachedXmlVehicle(stockNumber);
-      console.log("XML cache result:", xmlData);
-    } else {
-      console.warn("getCachedXmlVehicle function not available");
+      supabaseData = await window.getCachedXmlVehicle(stockNumber);
     }
   } catch (error) {
-    console.error("XML cache fetch failed:", error);
+    console.error("Supabase fetch failed:", error);
   }
 
-  // If we have XML data, render the simple template
-  if (xmlData) {
-    console.log("Rendering simple template with XML data");
-    renderHangTags("simple", xmlData);
-    
-    // Initialize barcode
-    if (xmlData.VIN) {
-      initHangTagBarcode(xmlData.VIN, "#barcode-left");
-      initHangTagBarcode(xmlData.VIN, "#barcode-right");
-    }
-  } else {
-    // No data found
+  if (!supabaseData) {
     const message = `Stock number "${stockNumber}" not found.<br><small class="text-muted">Unit may not be in inventory.</small>`;
     renderHangTags("error", message);
+    return;
   }
 
-  // Try to enhance with portal data (may fail due to CORS on localhost)
-  try {
-    console.log("Attempting portal API fetch for:", stockNumber);
-    const portalData = await fetchHangTagData(stockNumber);
-    
-    if (portalData && portalData.stockNumber) {
-      console.log("Portal data available, rendering full template");
-      console.log("Portal data:", portalData);
-      renderHangTags("default", portalData);
-      initHangTagQR(portalData.detailUrl);
-      initHangTagBarcode(portalData.vin);
-    } else {
-      console.log("Portal returned but no stockNumber:", portalData);
-    }
-  } catch {
-    // Portal API failed (likely CORS) - keep showing XML-based template
-    console.log("Portal API unavailable (CORS), using XML data only");
+  // 2. Normalize baseline and render immediately
+  let tagData = normalizeHangTagData(supabaseData);
+  renderHangTags("default", tagData);
+
+  if (tagData.vin) {
+    initHangTagBarcode(tagData.vin, "#barcode");
+  }
+
+  // 3. Fetch portal API to enrich with pricing detail
+  const portalData = await fetchPortalData(stockNumber);
+  if (portalData) {
+    tagData = normalizeHangTagData(supabaseData, portalData);
+    renderHangTags("default", tagData);
+    initHangTagQR(tagData.detailUrl);
+    initHangTagBarcode(tagData.vin);
   }
 }
 

@@ -5,7 +5,6 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Hang Tags</title>
 		<link rel="icon" type="image/x-icon" href="../img/favicon.png" />
-		<link rel="stylesheet" href="../css/roboto.css" />
 		<link rel="stylesheet" href="../scss/styles.scss" />
 		<link rel="stylesheet" href="../css/style.css" />
 		<script type="module" src="../js/bootstrap-init.js"></script>
@@ -15,7 +14,7 @@
 		<div class="d-print-none">
 			<div
 				id="hangTagOptions"
-				class="card shadow text-start p-4 rounded-4 bg-dark text-light border-1 border-secondary-subtle"
+				class="card shadow text-start p-4 rounded-4 bg-dark text-light border-1 border-secondary-50"
 				style="
 					width: 140px;
 					position: fixed;
@@ -275,20 +274,22 @@
 			function getHangTagsFitZoom() {
 				const container = document.getElementById("hangTagsContainer");
 				if (!container) return 1;
-				if (!container.dataset.baseWidth || !container.dataset.baseHeight) {
-					const rect = container.getBoundingClientRect();
-					container.dataset.baseWidth = rect.width;
-					container.dataset.baseHeight = rect.height;
-				}
+				// Temporarily reset zoom so measurement is unscaled
+				const prevZoom = container.style.zoom;
+				const prevTransform = container.style.transform;
+				container.style.zoom = "";
+				container.style.transform = "";
+				const rect = container.getBoundingClientRect();
+				container.style.zoom = prevZoom;
+				container.style.transform = prevTransform;
+
 				const header = document.querySelector("header");
 				const headerHeight = header ? header.offsetHeight : 0;
 				const padding = 32;
 				const availableWidth = window.innerWidth - padding * 2;
 				const availableHeight = window.innerHeight - headerHeight - padding * 2;
-				const baseWidth =
-					parseFloat(container.dataset.baseWidth) || availableWidth;
-				const baseHeight =
-					parseFloat(container.dataset.baseHeight) || availableHeight;
+				const baseWidth = rect.width || availableWidth;
+				const baseHeight = rect.height || availableHeight;
 				const scale = Math.min(
 					availableWidth / baseWidth,
 					availableHeight / baseHeight,
@@ -322,6 +323,11 @@
 				});
 
 				window.addEventListener("resize", () => {
+					currentZoom = getHangTagsFitZoom();
+					applyHangTagsZoom(currentZoom);
+				});
+
+				window.addEventListener("hangTagsRendered", () => {
 					currentZoom = getHangTagsFitZoom();
 					applyHangTagsZoom(currentZoom);
 				});

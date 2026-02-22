@@ -3,6 +3,14 @@
  * Styles for rendering and printing vehicle hang tags.
  */
 
+/* Roboto Flex variable font — single file covers all weights */
+@font-face {
+  font-family: "Roboto Flex";
+  src: url("../fonts/Roboto_Flex/RobotoFlex-VariableFont_GRAD,XOPQ,XTRA,YOPQ,YTAS,YTDE,YTFI,YTLC,YTUC,opsz,slnt,wdth,wght.ttf") format("truetype supports variations"), url("../fonts/Roboto_Flex/RobotoFlex-VariableFont_GRAD,XOPQ,XTRA,YOPQ,YTAS,YTDE,YTFI,YTLC,YTUC,opsz,slnt,wdth,wght.ttf") format("truetype");
+  font-weight: 100 1000;
+  font-style: normal;
+}
+
 /* ===========================================
    BASE STYLES
    =========================================== */
@@ -12,6 +20,10 @@
   background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
   min-height: 100vh;
+}
+.super-bold {
+  font-family: Roboto_Flex;
+  font-weight: 700 !important;
 }
 
 .tags-container {
@@ -51,7 +63,10 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  font-family: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Roboto Flex", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   position: relative;
   box-sizing: border-box;
 }

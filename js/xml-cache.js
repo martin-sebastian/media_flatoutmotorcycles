@@ -62,7 +62,9 @@ async function getCachedXmlVehicle(stockNumber) {
       B50MetricType: row.metric_type || "",
       B50MetricValue: row.metric_value != null ? String(row.metric_value) : "",
       MetricType: row.metric_type || "",
-      MetricValue: row.metric_value != null ? String(row.metric_value) : ""
+      MetricValue: row.metric_value != null ? String(row.metric_value) : "",
+      Price: row.price != null ? String(row.price) : "",
+      MSRP: row.price != null ? String(row.price) : ""
     };
 
     _xmlCacheMap[key] = data;

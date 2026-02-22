@@ -1318,7 +1318,7 @@ function showDataLoadError(message) {
 	// Create error message row
 	const row = document.createElement("tr");
 	row.innerHTML = `
-    <td colspan="13" class="text-center p-5">
+    <td colspan="12" class="text-center">
       <div class="alert alert-danger" role="alert">
         <i class="bi bi-exclamation-triangle me-2"></i>
         ${message}
@@ -1859,7 +1859,6 @@ function keyTagFromData(data) {
 	const normalized = {
 		StockNumber: data?.StockNumber || "",
 		Usage: data?.Usage || "",
-		ModelYear: data?.ModelYear || "",
 		Manufacturer: data?.Manufacturer || "",
 		ModelName: data?.ModelName || "",
 		ModelCode: data?.ModelCode || "",
@@ -2380,7 +2379,7 @@ function updateTable() {
 		const row = document.createElement("tr");
 		row.innerHTML = `
       <td data-column="select" class="text-center" nowrap>
-        <input type="checkbox" class="form-check-input fs-6 tv-grid-select" data-stock="${stockNumber}" title="Select for TV Grid">
+        <input type="checkbox" class="form-check-input tv-grid-select" data-stock="${stockNumber}" title="Select for TV Grid">
       </td>
       <td data-column="image" class="" nowrap>
         <a href="${webURL}" target="_blank">
@@ -2389,11 +2388,11 @@ function updateTable() {
       </td>
 	  <td data-column="stock-number" nowrap>
 		<div class="flex-nowrap d-inline-flex flex-row align-items-center justify-contend-between">
-		  <input type="text" class="form-control form-control-sm fw-light small text-uppercase" name="stockNumber" value="${stockNumber}" placeholder="Stock Number" title="${stockNumber}" aria-label="stock number"disabled aria-describedby="btnGroupAddon" disabled>
+		  <input type="text" class="form-control form-control-sm fw-light pe-5 small text-uppercase" name="stockNumber" value="${stockNumber}" placeholder="Stock Number" title="${stockNumber}" aria-label="stock number"disabled aria-describedby="btnGroupAddon" disabled>
 		  <div class="" id="btnCopyToClipboard">
 			<button type="button" 
-			  class="btn-icon copy-clipboard btn-sm" 
-			  style="margin-left: 2px;"
+			  class="btn-icon copy-clipboard" 
+			  style="margin-left: -32px; border: none; background: terftiary."
 			  data-bs-toggle="tooltip"
 			  data-bs-placement="top"
 			  data-bs-title="Copy to clipboard"
@@ -2405,7 +2404,7 @@ function updateTable() {
 	  </td>
       <td class="text-center" data-column="usage" nowrap><span class="badge ${usage === "New" ? "text-bg-success" : "text-bg-secondary"}">${usage}</span></td>
       <td class="text-center" nowrap>
-        <span class="badge text-bg-dark border">${year}</span>
+        <span class="badge text-bg-primary border">${year}</span>
       </td>
       <td class="logo text-center" nowrap>
 		<img 
@@ -2417,7 +2416,9 @@ function updateTable() {
 	</td>
       <td class="align-middle" nowrap style="line-height:1.1">
         <h6 class="model-text h5 small mb-1 fw-semibold" title="${title}">${title}</h6>
-        <span class="text-muted" style="font-size:.65rem">${[modelType, color, metricValue != null ? `<i class="bi bi-speedometer2"></i> ${metricValue.toLocaleString()} ${metricType || ""}` : ""].filter(v => v && v !== "N/A").join(" &bull; ")}</span>
+       
+		<span class="text-muted" style="font-size:.65rem">${[modelType, color, metricValue != null ? `<i class="bi bi-speedometer2"></i> ${metricValue.toLocaleString()} ${metricType || ""}` : ""].filter(v => v && v !== "N/A").join(" &bull; ")}</span>
+		<span clas=labeld""></span>
         <span class="visually-hidden">
         ${stockNumber} ${vin} ${usage} ${year} ${manufacturer} ${modelName} ${modelType} ${color} ${updatedDate?.format("YYYY-MM-DD") ?? ""}
         </span>
@@ -2426,14 +2427,14 @@ function updateTable() {
       <td data-column="color" class="text-center small" nowrap>${color !== "N/A" ? color : ""}</td>
 
       <td data-column="price" class="text-center" nowrap>
-        <span class="badge text-bg-success fs-6 small fw-bold price-badge"><small>${webPrice}<small></span>
+        <span class="badge text-bg-success small fw-bold price-badge"><small>${webPrice}<small></span>
       </td>
       
       <td class="text-center p-4" data-column="photos" nowrap>
 		${
 			parseInt(imageElements) > 10 ?
-				`<span class="photos-status text-tooltip" title="In-House Photos Done" data-bs-toggle="tooltip" data-bs-placement="top"><i class="bi bi-camera2 text-warning"></i><span class="visually-hidden" style="font-size: 10px;">FOM PHOTOS</span></span>`
-			:	`<span class="photos-status text-tooltip" title="Awaiting Photo Shoot" data-bs-toggle="tooltip" data-bs-placement="top"><i class="bi bi-camera2 text-secondary"></i><span class="visually-hidden" style="font-size: 10px;">STOCK PHOTOS</span></span>`
+				`<span class="photos-status text-tooltip" title="In-House Photos Done" data-bs-toggle="tooltip" data-bs-placement="top"><i class="bi bi-camera2 text-warning"></i><span class="visually-hidden" style="font-size: 14px;">FOM PHOTOS</span></span>`
+			:	`<span class="photos-status text-tooltip" title="Awaiting Photo Shoot" data-bs-toggle="tooltip" data-bs-placement="top"><i class="bi bi-camera2 text-secondary"></i><span class="visually-hidden" style="font-size: 14px;">STOCK PHOTOS</span></span>`
 		}
       </td>
 
@@ -2461,7 +2462,7 @@ function updateTable() {
       </td>
 
       <td class="text-center action-cell" nowrap>
-		<div class="action-button-group btn-group btn-pill overflow-hiddern" role="group" aria-label="Button group with nested dropdown">
+		<div class="action-button-group btn-group rounded-pill overflow-hiddern " role="group" aria-label="Button group with nested dropdown">
 			<button type="button" id="keytagModalButton" class="btn btn-danger" title="Key Tag" data-bs-toggle="modal" data-bs-target="#keytagModal" data-bs-stocknumber="${stockNumber}">
 				<i class="bi bi-phone rotated-label mx-1"></i>
 				<span class="action-button-label visually-hidden">KEY TAG</span>
@@ -2489,7 +2490,7 @@ function updateTable() {
 				</button>
 				<ul class="dropdown-menu small text-capitalize text-start overflow-hidden dropdown-menu-end">
 					<li class="small">
-						<a href="javascript:void(0);" type="button" id="keytagModalButton" class="dropdown-item pe-5" title="Print Key Tags" data-bs-toggle="modal" data-bs-target="#keytagModal" data-bs-stocknumber="${stockNumber}">
+						<a href="javascript:void( 0);" type="button" id="keytagModalButton" class="dropdown-item pe-5" title="Print Key Tags" data-bs-toggle="modal" data-bs-target="#keytagModal" data-bs-stocknumber="${stockNumber}">
 							<i class="bi bi-tag dropdown-icon small me-2"></i>
 							Print Key Tags
 						</a>

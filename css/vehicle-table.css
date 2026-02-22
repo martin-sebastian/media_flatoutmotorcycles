@@ -3,7 +3,14 @@
     table-layout: fixed;
     width: 100%;
     min-width: 1300px;
-    border-collapse: separate;
+}
+
+/* Remove header border, keep horizontal row borders on body only */
+#vehiclesTable thead tr {
+    border-bottom: none;
+}
+#vehiclesTable tbody tr {
+    border-bottom: var(--bs-border-width) solid var(--bs-border-color);
 }
 
 /* Lock row height and clip overflow in non-flexible columns */

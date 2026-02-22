@@ -31,21 +31,22 @@
 
     <title>FOM PRINT</title>
     <link rel="stylesheet" href="./scss/styles.scss" />
+    <link rel="stylesheet" href="./css/roboto.css" />
     <link rel="stylesheet" href="./css/style.css?v=3" />
     <link rel="stylesheet" href="./css/vehicle-table.css" />
     <link rel="stylesheet" href="./key-tags/key-tag.css" />
   </head>
 
 
-  <body data-bs-theme="dark">
-    <div class="alert alert-danger bg-danger border-0 rounded-0 mb-0 alert-dismissible fade show" role="alert">
-      <div class="container-fluid small">
+  <body data-bs-theme="dark" class="bg-body-color">
+    <div class="alert alert-danger bg-danger border-0 rounded-0 mb-0 alert-dismissible fade show d-none" role="alert">
+      <div class="container-fluid">
         <span class="fw-semibold text-light small">New Version V.1.1.26!</span> <small class="text-light">If you don't see this message you are on the old version.</small>
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     </div>
       <header class="d-print-none">
-        <nav class="navbar navbar-expand-xl bg-body-tertiary border-bottom border-secondary-subtle bg-blur flex-nowrap justify-content-center">
+        <nav class="navbar navbar-expand-xl bg-body-tertiary border-bottom border-secondary-75 bg-blur flex-nowrap justify-content-center shadow-sm">
           <div class="container-fluid flex-nowrap justify-content-center">
             <div class="navbar-left d-flex flex-row align-items-center w-100">
               <a class="navbar-brand m-0 p-0" href="./">
@@ -241,7 +242,7 @@
           <!-- END ELEMENT FOR DISPLAYING ROW COUNT -->
 
           <!-- FILTERS -->
-           <div class="bg-body-tertiary border border-secondary-subtle rounded-3 p-1 mb-2 d-none d-lg-block">
+           <div class="bg-body-tertiary border border-secondary-50 rounded-3 p-1 mb-2 d-none d-lg-block">
               <form class="form-group form-group-sm d-flex justify-content-between" role="search" data-filter-group="desktop">
                 <div class="w-75 left-group d-flex align-items-center gap-2">
                   <label for="searchFilter" class="visually-hidden">Search</label>
@@ -348,8 +349,8 @@
 
           <!-- TABLE START -->
           <div class="table-scroll-container rounded-3 border border-1 border-secondary-50">
-              <div class="table-responsive w-100">
-                <table id="vehiclesTable" class="table">
+              <div class="table-responsive table-contaier w-100">
+                <table id="vehiclesTable" class="table table-responsive">
                   <colgroup>
                     <col style="width: 50px" data-column="select">
                     <col style="width: 85px" data-column="image">
@@ -514,7 +515,7 @@
     </div>
 
     <div class="modal fade" id="hangTagsModal" tabindex="-1" aria-labelledby="hangTagsModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-fullscreen">
+      <div class="modal-dialog modal-fullscreen ">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title text-capitalize" id="hangTagsModalLabel"><i class="bi bi-tags me-2 icon-circle text-white"></i>Hang Tags</h5>
@@ -630,7 +631,7 @@
     <div class="modal fade" id="tvWorkspaceModal" tabindex="-1" aria-labelledby="tvWorkspaceModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-fullscreen">
         <div class="modal-content tv-workspace-content">
-          <div class="modal-header border-bottom border-secondary-subtle">
+          <div class="modal-header border-bottom border-secondary-50">
             <h5 class="modal-title" id="tvWorkspaceModalLabel">
               <i class="bi bi-tv me-2"></i>TV Display Workspace
             </h5>
@@ -638,7 +639,7 @@
           </div>
           <div class="modal-body p-0 overflow-hidden">
             <div class="tv-workspace-layout">
-              <aside class="tv-workspace-sidebar border-end border-secondary-subtle">
+              <aside class="tv-workspace-sidebar border-end border-secondary-50">
                 <div class="d-flex flex-column gap-3">
                   <div>
                     <div>
@@ -732,7 +733,7 @@
               </section>
             </div>
           </div>
-          <div class="modal-footer border-top border-secondary-subtle justify-content-start">
+          <div class="modal-footer border-top border-secondary-50 justify-content-start">
             <div class="row g-3 align-items-center flex-nowrap w-100">
               
               <div class="col-auto">
